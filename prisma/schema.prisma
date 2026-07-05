@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
+model User {
+  id            String    @id @default(cuid())
+  clerkId       String    @unique
+  email         String
+  name          String?
+  isPremium     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  predictions   Prediction[]
+  subscriptions Subscription[]
+}
+
+model Team {
+  id          Int      @id
+  name        String
+  code        String?
+  country     String?
+  founded     Int?
+  national    Boolean?
+  logo        String?
+  fifaRanking Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
+  standings   Standing[]
+}
+
+model Competition {
+  id       Int       @id
+  name     String
+  code     String?
+  type     String?
+  logo     String?
+  season   Int?
+  matches  Match[]
+  standings Standing[]
+}
+
+model Match {
+  id              Int         @id
+  competitionId   Int?
+  competition     Competition? @relation(fields: [competitionId], references: [id])
+  season          Int?
+  round           String?
+  date            DateTime
+  status          MatchStatus @default(SCHEDULED)
+  minute          Int?
+  homeTeamId      Int
+  homeTeam        Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId      Int
+  awayTeam        Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  homeScore       Int?
+  awayScore       Int?
+  homeXg          Float?
+  awayXg          Float?
+  possessionHome  Float?
+  possessionAway  Float?
+  shotsHome       Int?
+  shotsAway       Int?
+  shotsOnTargetHome Int?
+  shotsOnTargetAway Int?
+  venue           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  predictions Prediction[]
+}
+
+model Standing {
+  id            Int    @id
+  competitionId Int?
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  season        Int?
+  teamId        Int
+  team          Team   @relation(fields: [teamId], references: [id])
+  position      Int
+  played        Int    @default(0)
+  won           Int    @default(0)
+  drawn         Int    @default(0)
+  lost          Int    @default(0)
+  goalsFor      Int    @default(0)
+  goalsAgainst  Int    @default(0)
+  goalDiff      Int    @default(0)
+  points        Int    @default(0)
+  form          String?
+  groupName     String?
+}
+
+model Prediction {
+  id        String   @id @default(cuid())
+  matchId   Int
+  match     Match    @relation(fields: [matchId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  homeScore Int?
+  awayScore Int?
+  winner    String?
+  confidence Float?
+  analysis  String?
+  isPremium Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  active    Boolean  @default(true)
+  txHash    String?
+  amount    String?
+  currency  String   @default("USDC")
+  createdAt DateTime @default(now())
+  expiresAt DateTime?
+}
