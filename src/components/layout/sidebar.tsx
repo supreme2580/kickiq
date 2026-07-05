@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Plus, Search, MessageSquare, Settings, LogOut, Menu, Trophy, Trash2 } from "lucide-react"
+import { Plus, Search, MessageSquare, Settings, LogOut, Menu, Trophy, Trash2, PanelLeftClose, PanelLeft } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
@@ -16,7 +16,8 @@ const CHAT_HISTORY = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
 
   const filteredHistory = CHAT_HISTORY.filter((c) =>
@@ -29,18 +30,18 @@ export function Sidebar() {
     { label: "Older", items: filteredHistory.filter((c) => c.date !== "Today" && c.date !== "Yesterday") },
   ]
 
-  const nav = (
+  // Full sidebar content (used in both expanded desktop and mobile sheet)
+  const fullSidebar = (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
         <Link
           href="/"
-          onClick={() => setOpen(false)}
+          onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 shrink-0" />
           <span>New chat</span>
         </Link>
-
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <input
@@ -51,7 +52,6 @@ export function Sidebar() {
           />
         </div>
       </div>
-
       <div className="flex-1 overflow-y-auto px-2 space-y-4">
         {groups.map((group) =>
           group.items.length > 0 ? (
@@ -61,7 +61,7 @@ export function Sidebar() {
                 {group.items.map((chat) => (
                   <button
                     key={chat.id}
-                    onClick={() => setOpen(false)}
+                    onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
                     className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors group"
                   >
                     <MessageSquare className="h-3.5 w-3.5 shrink-0" />
@@ -74,27 +74,55 @@ export function Sidebar() {
           ) : null
         )}
       </div>
-
       <div className="p-3 border-t border-border space-y-1">
         <Link
           href="/premium"
-          onClick={() => setOpen(false)}
+          onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
-          <Trophy className="h-4 w-4" />
+          <Trophy className="h-4 w-4 shrink-0" />
           <span>Premium</span>
         </Link>
         <Link
           href="/about"
-          onClick={() => setOpen(false)}
+          onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
-          <Settings className="h-4 w-4" />
+          <Settings className="h-4 w-4 shrink-0" />
           <span>About KickIQ</span>
         </Link>
         <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 shrink-0" />
           <span>Log out</span>
+        </button>
+      </div>
+    </div>
+  )
+
+  const iconOnly = (
+    <div className="flex flex-col h-full items-center py-3 px-2 space-y-3">
+      <button
+        onClick={() => setSidebarOpen(true)}
+        className="flex items-center justify-center h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
+      <div className="flex-1 flex flex-col items-center gap-1">
+        {CHAT_HISTORY.slice(0, 3).map((chat) => (
+          <button
+            key={chat.id}
+            className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          >
+            <MessageSquare className="h-3.5 w-3.5" />
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-col items-center gap-1 pt-3 border-t border-border w-full">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+        >
+          <PanelLeft className="h-4 w-4" />
         </button>
       </div>
     </div>
@@ -102,17 +130,48 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex w-64 flex-col border-r border-border bg-sidebar shrink-0">
-        {nav}
+      {/* Desktop: collapsed sidebar (icons only) */}
+      <aside className="hidden md:flex flex-col border-r border-border bg-sidebar shrink-0 w-14">
+        {iconOnly}
       </aside>
 
+      {/* Desktop: expanded overlay sidebar */}
+      {sidebarOpen && (
+        <>
+          <div
+            className="hidden md:block fixed inset-0 z-40 bg-black/30"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-64 flex-col border-r border-border bg-sidebar shadow-xl animate-in">
+            <div className="flex items-center justify-end p-2">
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            </div>
+            {fullSidebar}
+          </aside>
+        </>
+      )}
+
+      {/* Mobile */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center h-12 border-b border-border bg-background px-3">
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
             <Menu className="h-5 w-5" />
           </SheetTrigger>
           <SheetContent side="left" className="w-64 p-0 bg-sidebar">
-            {nav}
+            <div className="flex items-center justify-end p-2 border-b border-border">
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+              >
+                <PanelLeftClose className="h-4 w-4" />
+              </button>
+            </div>
+            {fullSidebar}
           </SheetContent>
         </Sheet>
         <Link href="/" className="flex items-center gap-2 ml-2">
