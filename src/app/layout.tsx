@@ -3,7 +3,6 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Providers } from "@/components/layout/providers"
 import { Sidebar } from "@/components/layout/sidebar"
-import { BottomNav } from "@/components/layout/bottom-nav"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,7 +13,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "KickIQ — AI Copilot for the World Cup",
   description:
-    "AI-powered football assistant for the FIFA World Cup. Get predictions, live scores, standings, and premium AI insights powered by Injective.",
+    "AI-powered football assistant for the FIFA World Cup. Get predictions, live scores, standings, and premium AI insights.",
 }
 
 export default function RootLayout({
@@ -28,13 +27,10 @@ export default function RootLayout({
         <Providers>
           <div className="flex h-full">
             <Sidebar />
-            <main className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
-              <div className="flex-1">
-                {children}
-              </div>
+            <main className="flex-1 flex flex-col min-w-0">
+              {children}
             </main>
           </div>
-          <BottomNav />
         </Providers>
       </body>
     </html>
