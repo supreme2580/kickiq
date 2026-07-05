@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import { completion, getClient } from "./openai"
+import { completion, getClient, getModel } from "./openai"
 
 interface ToolResult {
   name: string
@@ -37,7 +37,7 @@ export async function runAgent(
 
   const client = getClient()
   const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getModel(),
     messages,
     tools: toolDefinitions,
     tool_choice: "auto",

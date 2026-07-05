@@ -1,14 +1,15 @@
 "use client"
 
-import { useState, useRef, useEffect, Suspense } from "react"
-import { useSearchParams } from "next/navigation"
-import { ArrowUp, Copy, RotateCcw, ThumbsUp, ThumbsDown, Plus } from "lucide-react"
+import { useState, useRef, useEffect, Suspense, useCallback } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import { ArrowUp, Copy, RotateCcw, ThumbsUp, ThumbsDown, Zap, Loader2, Bot, CheckCircle2, ChevronDown } from "lucide-react"
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { WorldCupIcon } from "@/components/icons/world-cup"
 import { PredictionCard } from "@/components/cards/prediction-card"
 import { StandingsCard } from "@/components/cards/standings-card"
 import { FixtureCard } from "@/components/cards/fixture-card"
+import { useUser } from "@clerk/nextjs"
 
 interface Message {
   id: string
@@ -40,12 +41,21 @@ export default function Home() {
 
 function HomeContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const { isSignedIn } = useUser()
   const initialQuery = searchParams.get("q") || ""
+  const conversationIdParam = searchParams.get("c")
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState(initialQuery)
   const [loading, setLoading] = useState(false)
   const [streamingContent, setStreamingContent] = useState("")
+  const [mode, setMode] = useState<"simple" | "deep">("simple")
+  const [premiumAccess, setPremiumAccess] = useState(false)
+  const [paymentStep, setPaymentStep] = useState<"idle" | "paying" | "verifying" | "error">("idle")
+  const [pendingDeepMessage, setPendingDeepMessage] = useState<string | null>(null)
+  const [showPaymentPrompt, setShowPaymentPrompt] = useState(false)
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -59,11 +69,34 @@ function HomeContent() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, streamingContent])
+  }, [messages, streamingContent, showPaymentPrompt])
 
   useEffect(() => {
     if (initialQuery) handleSend(initialQuery)
   }, [])
+
+  useEffect(() => {
+    if (!conversationIdParam) return
+    fetch(`/api/conversations/${conversationIdParam}`)
+      .then((r) => {
+        if (!r.ok) throw new Error("Not found")
+        return r.json()
+      })
+      .then((data) => {
+        setConversationId(data.id)
+        const loaded: Message[] = (data.messages || []).map((m: { role: string; content: string }) => ({
+          id: nextId(),
+          role: m.role,
+          content: m.content,
+          components: [],
+        }))
+        setMessages(loaded)
+      })
+      .catch(() => {
+        setConversationId(null)
+        setMessages([])
+      })
+  }, [conversationIdParam])
 
   function generateComponents(content: string): React.ReactNode[] {
     const lower = content.toLowerCase()
@@ -95,22 +128,32 @@ function HomeContent() {
     }
   }
 
-  async function handleSend(message?: string) {
-    const text = (message || input).trim()
-    if (!text || loading) return
-
-    setMessages((prev) => [...prev, { id: nextId(), role: "user", content: text }])
-    setInput("")
+  async function performAPICall(text: string) {
     setLoading(true)
-
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (mode === "deep") {
+        headers["x-402-payment"] = "verified"
+      }
+
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        headers,
+        body: JSON.stringify({
+          message: text,
+          mode,
+          conversationId: isSignedIn ? conversationId : null,
+        }),
       })
       const data = await res.json()
       const fullContent = data.response || data.content || ""
+
+      if (data.conversationId && isSignedIn) {
+        setConversationId(data.conversationId)
+        if (data.conversationId !== conversationIdParam) {
+          router.replace(`/?c=${data.conversationId}`, { scroll: false })
+        }
+      }
 
       const components = generateComponents(fullContent)
       await streamResponse(fullContent)
@@ -130,6 +173,114 @@ function HomeContent() {
     }
   }
 
+  async function handleSend(message?: string) {
+    const text = (message || input).trim()
+    if (!text || loading) return
+
+    setMessages((prev) => [...prev, { id: nextId(), role: "user", content: text }])
+    setInput("")
+
+    if (mode === "deep" && !premiumAccess) {
+      setPendingDeepMessage(text)
+      setShowPaymentPrompt(true)
+      return
+    }
+
+    await performAPICall(text)
+  }
+
+  async function handlePayment() {
+    if (!pendingDeepMessage) return
+
+    setPaymentStep("paying")
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: pendingDeepMessage,
+          mode: "deep",
+          conversationId: isSignedIn ? conversationId : null,
+        }),
+      })
+
+      if (res.status !== 402) {
+        const data = await res.json()
+        setPremiumAccess(true)
+        setShowPaymentPrompt(false)
+        setPaymentStep("idle")
+        const fullContent = data.response || data.content || ""
+
+        if (data.conversationId && isSignedIn) {
+          setConversationId(data.conversationId)
+          router.replace(`/?c=${data.conversationId}`, { scroll: false })
+        }
+
+        const components = generateComponents(fullContent)
+        await streamResponse(fullContent)
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "assistant", content: fullContent, components: components.length ? components : undefined },
+        ])
+        setStreamingContent("")
+        setPendingDeepMessage(null)
+        return
+      }
+
+      const body = await res.json()
+      const requirements = body.accepts?.[0]
+      if (!requirements) {
+        setPaymentStep("error")
+        return
+      }
+
+      setPaymentStep("verifying")
+
+      const { signX402Payment } = await import("@/lib/x402-client")
+      const paymentHeader = await signX402Payment(requirements, 1439)
+
+      const retryRes = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "PAYMENT-SIGNATURE": paymentHeader,
+          "X-PAYMENT": paymentHeader,
+        },
+        body: JSON.stringify({
+          message: pendingDeepMessage,
+          mode: "deep",
+          conversationId: isSignedIn ? conversationId : null,
+        }),
+      })
+
+      if (retryRes.ok) {
+        const data = await retryRes.json()
+        setPremiumAccess(true)
+        setShowPaymentPrompt(false)
+        setPaymentStep("idle")
+        const fullContent = data.response || data.content || ""
+
+        if (data.conversationId && isSignedIn) {
+          setConversationId(data.conversationId)
+          router.replace(`/?c=${data.conversationId}`, { scroll: false })
+        }
+
+        const components = generateComponents(fullContent)
+        await streamResponse(fullContent)
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "assistant", content: fullContent, components: components.length ? components : undefined },
+        ])
+        setStreamingContent("")
+        setPendingDeepMessage(null)
+      } else {
+        setPaymentStep("error")
+      }
+    } catch {
+      setPaymentStep("error")
+    }
+  }
+
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
@@ -141,7 +292,68 @@ function HomeContent() {
     navigator.clipboard.writeText(content)
   }
 
-  // ============ WELCOME SCREEN ============
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  function ModeToggle() {
+    return (
+      <div ref={dropdownRef} className="relative">
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+        >
+          {mode === "simple" ? <Bot className="h-3.5 w-3.5" /> : <Zap className="h-3.5 w-3.5 text-primary" />}
+          <span className={mode === "deep" ? "text-primary" : ""}>
+            {mode === "simple" ? "KickIQ" : "KickIQ Deep"}
+          </span>
+          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+        </button>
+          {dropdownOpen && (
+          <div className="absolute top-full left-0 mt-1 w-44 rounded-lg border border-border bg-popover shadow-lg z-[100] overflow-hidden">
+            <button
+              onClick={() => { setMode("simple"); setDropdownOpen(false) }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors cursor-pointer ${
+                mode === "simple"
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              }`}
+            >
+              <Bot className="h-3.5 w-3.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">KickIQ</div>
+                <div className="text-[10px] text-muted-foreground/60">Quick answers</div>
+              </div>
+            </button>
+            <button
+              onClick={() => { setMode("deep"); setDropdownOpen(false) }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors cursor-pointer ${
+                mode === "deep"
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              }`}
+            >
+              <Zap className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <div className="flex-1 min-w-0">
+                <div className="font-medium">KickIQ Deep</div>
+                <div className="text-[10px] text-muted-foreground/60">Tactical analysis</div>
+              </div>
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (messages.length === 0 && !loading) {
     return (
       <div className="flex flex-col h-full bg-background">
@@ -160,7 +372,7 @@ function HomeContent() {
             </div>
 
             <div className="relative">
-              <div className="relative bg-card border border-border rounded-xl shadow-sm overflow-hidden focus-within:border-muted-foreground/40 transition-colors">
+              <div className="relative bg-card border border-border rounded-xl shadow-sm focus-within:border-muted-foreground/40 transition-colors">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -170,10 +382,13 @@ function HomeContent() {
                   rows={1}
                   className="w-full resize-none bg-transparent px-4 py-3.5 pr-12 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
                 />
+                <div className="flex items-center px-3 pb-1.5">
+                  <ModeToggle />
+                </div>
                 <button
                   onClick={() => handleSend()}
                   disabled={!input.trim()}
-                  className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background disabled:opacity-30 transition-opacity hover:opacity-90"
+                  className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background disabled:opacity-30 transition-opacity hover:opacity-90 cursor-pointer"
                 >
                   <ArrowUp className="h-3.5 w-3.5" />
                 </button>
@@ -185,7 +400,7 @@ function HomeContent() {
                 <button
                   key={prompt}
                   onClick={() => handleSend(prompt)}
-                  className="px-3 py-1.5 rounded-full border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                  className="px-3 py-1.5 rounded-full border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
                 >
                   {prompt}
                 </button>
@@ -203,7 +418,6 @@ function HomeContent() {
     )
   }
 
-  // ============ CONVERSATION ============
   return (
     <div className="flex flex-col h-full bg-background">
       <div ref={scrollRef} className="flex-1 overflow-y-auto">
@@ -245,17 +459,17 @@ function HomeContent() {
                     <div className="flex items-center gap-0.5 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => copyMessage(msg.content)}
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
                       >
                         <Copy className="h-3.5 w-3.5" />
                       </button>
-                      <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                      <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
                         <RotateCcw className="h-3.5 w-3.5" />
                       </button>
-                      <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                      <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
                         <ThumbsUp className="h-3.5 w-3.5" />
                       </button>
-                      <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors">
+                      <button className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
                         <ThumbsDown className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -264,7 +478,68 @@ function HomeContent() {
               </div>
             ))}
 
-            {/* Streaming message */}
+            {showPaymentPrompt && (
+              <div className="flex gap-3 px-1 py-3 md:px-4">
+                <Avatar className="h-7 w-7 rounded-sm mt-0.5">
+                  <AvatarFallback className="rounded-sm bg-transparent text-foreground">
+                    <WorldCupIcon size={16} />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">KickIQ</p>
+                  <div className="text-sm text-foreground space-y-3">
+                    <p>
+                      This question requires <span className="font-medium text-primary">Deep Analysis</span> mode using AI tactical reasoning.
+                    </p>
+                    <div className="rounded-lg border border-border bg-card/50 p-3 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground">One-time payment</span>
+                        <div className="flex items-center gap-1.5">
+                          <Zap className="h-3.5 w-3.5 text-primary" />
+                          <span className="text-sm font-semibold">0.50 USDC</span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handlePayment}
+                        disabled={paymentStep === "paying" || paymentStep === "verifying"}
+                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                      >
+                        {paymentStep === "idle" && (
+                          <>
+                            <Zap className="h-4 w-4" />
+                            Pay with x402
+                          </>
+                        )}
+                        {paymentStep === "paying" && (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Processing Payment...
+                          </>
+                        )}
+                        {paymentStep === "verifying" && (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Verifying...
+                          </>
+                        )}
+                      </button>
+                      {paymentStep === "error" && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-red-500">Payment failed. Please try again.</span>
+                          <button
+                            onClick={() => setPaymentStep("idle")}
+                            className="text-xs text-muted-foreground hover:text-foreground underline cursor-pointer"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {streamingContent && (
               <div className="group flex gap-3 px-1 py-3 md:px-4">
                 <Avatar className="h-7 w-7 rounded-sm mt-0.5">
@@ -282,7 +557,6 @@ function HomeContent() {
               </div>
             )}
 
-            {/* Loading dots (before streaming starts) */}
             {loading && !streamingContent && (
               <div className="flex gap-3 px-1 py-3 md:px-4">
                 <Avatar className="h-7 w-7 rounded-sm mt-0.5">
@@ -301,15 +575,25 @@ function HomeContent() {
               </div>
             )}
 
+            {premiumAccess && (
+              <div className="flex items-center justify-center gap-1.5 py-2">
+                <div className="h-px flex-1 bg-border/40" />
+                <div className="flex items-center gap-1 text-[10px] text-primary/60 font-medium uppercase tracking-wider">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Premium Active
+                </div>
+                <div className="h-px flex-1 bg-border/40" />
+              </div>
+            )}
+
             <div ref={bottomRef} />
           </div>
         </div>
       </div>
 
-      {/* Input */}
       <div className="border-t border-border bg-background">
         <div className="mx-auto w-full max-w-3xl px-4 py-3">
-          <div className="relative bg-card border border-border rounded-xl shadow-sm overflow-hidden focus-within:border-muted-foreground/40 transition-colors">
+          <div className="relative bg-card border border-border rounded-xl shadow-sm focus-within:border-muted-foreground/40 transition-colors">
             <textarea
               ref={inputRef}
               value={input}
@@ -319,10 +603,19 @@ function HomeContent() {
               rows={1}
               className="w-full resize-none bg-transparent px-4 py-3.5 pr-12 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none max-h-[200px]"
             />
+            <div className="flex items-center px-3 pb-1.5">
+              <ModeToggle />
+              {premiumAccess && (
+                <span className="ml-auto flex items-center gap-1 text-[10px] text-primary/60 font-medium">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Premium
+                </span>
+              )}
+            </div>
             <button
               onClick={() => handleSend()}
               disabled={!input.trim() || loading}
-              className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background disabled:opacity-30 transition-opacity hover:opacity-90"
+              className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background disabled:opacity-30 transition-opacity hover:opacity-90 cursor-pointer"
             >
               <ArrowUp className="h-3.5 w-3.5" />
             </button>

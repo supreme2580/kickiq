@@ -1,4 +1,4 @@
-import { getClient } from "@/services/ai/openai"
+import { getClient, getModel } from "@/services/ai/openai"
 
 export async function summarizeMatch(
   homeTeam: string,
@@ -29,7 +29,7 @@ export async function summarizeMatch(
 
   const client = getClient()
   const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getModel(),
     messages: [
       { role: "system", content: "You are a football match commentator. Summarize matches concisely and vividly." },
       { role: "user", content: prompt },

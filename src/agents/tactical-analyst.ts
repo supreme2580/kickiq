@@ -1,4 +1,4 @@
-import { getClient } from "@/services/ai/openai"
+import { getClient, getModel } from "@/services/ai/openai"
 
 export async function analyzeTactics(
   homeTeam: string,
@@ -29,7 +29,7 @@ Keep it concise — 4-5 bullet points max.`
 
   const client = getClient()
   const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getModel(),
     messages: [
       { role: "system", content: "You are a tactical football analyst. Be concise and insightful." },
       { role: "user", content: prompt },

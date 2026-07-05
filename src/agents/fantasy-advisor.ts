@@ -1,4 +1,4 @@
-import { getClient } from "@/services/ai/openai"
+import { getClient, getModel } from "@/services/ai/openai"
 
 export async function getFantasyPicks(
   fixtures: Array<{
@@ -34,7 +34,7 @@ export async function getFantasyPicks(
 
   const client = getClient()
   const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: getModel(),
     messages: [
       {
         role: "system",
