@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Trophy } from "lucide-react"
+import { WorldCupIcon } from "@/components/icons/world-cup"
 
 export default function AboutPage() {
   return (
@@ -12,9 +12,7 @@ export default function AboutPage() {
 
       <div className="text-center space-y-4">
         <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
-            <Trophy className="h-6 w-6 text-background" />
-          </div>
+          <WorldCupIcon size={48} className="text-foreground" />
         </div>
         <h1 className="text-4xl font-bold tracking-tight">KickIQ</h1>
         <p className="text-muted-foreground max-w-md mx-auto">

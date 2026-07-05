@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
-import { ArrowUp, Copy, RotateCcw, ThumbsUp, ThumbsDown, Plus, Trophy, Sparkles } from "lucide-react"
+import { ArrowUp, Copy, RotateCcw, ThumbsUp, ThumbsDown, Plus } from "lucide-react"
 import { motion } from "framer-motion"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { WorldCupIcon } from "@/components/icons/world-cup"
 import { PredictionCard } from "@/components/cards/prediction-card"
 import { StandingsCard } from "@/components/cards/standings-card"
 import { FixtureCard } from "@/components/cards/fixture-card"
@@ -212,8 +213,8 @@ function HomeContent() {
               <div key={msg.id} className="group flex gap-3 px-1 py-3 md:px-4">
                 {msg.role === "assistant" ? (
                   <Avatar className="h-7 w-7 rounded-sm mt-0.5">
-                    <AvatarFallback className="rounded-sm bg-foreground text-background text-xs">
-                      <Trophy className="h-3.5 w-3.5" />
+                    <AvatarFallback className="rounded-sm bg-transparent text-foreground">
+                      <WorldCupIcon size={16} />
                     </AvatarFallback>
                   </Avatar>
                 ) : (
@@ -267,8 +268,8 @@ function HomeContent() {
             {streamingContent && (
               <div className="group flex gap-3 px-1 py-3 md:px-4">
                 <Avatar className="h-7 w-7 rounded-sm mt-0.5">
-                  <AvatarFallback className="rounded-sm bg-foreground text-background text-xs">
-                    <Trophy className="h-3.5 w-3.5" />
+                  <AvatarFallback className="rounded-sm bg-transparent text-foreground">
+                    <WorldCupIcon size={16} />
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0 space-y-1">
@@ -285,8 +286,8 @@ function HomeContent() {
             {loading && !streamingContent && (
               <div className="flex gap-3 px-1 py-3 md:px-4">
                 <Avatar className="h-7 w-7 rounded-sm mt-0.5">
-                  <AvatarFallback className="rounded-sm bg-foreground text-background text-xs">
-                    <Trophy className="h-3.5 w-3.5" />
+                  <AvatarFallback className="rounded-sm bg-transparent text-foreground">
+                    <WorldCupIcon size={16} />
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0 space-y-1">

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { WorldCupIcon } from "@/components/icons/world-cup"
 
 const CHAT_HISTORY = [
   { id: "1", title: "Brazil vs Argentina prediction", date: "Today" },
@@ -176,8 +177,8 @@ export function Sidebar() {
           </SheetContent>
         </Sheet>
         <Link href="/" className="flex items-center gap-2 ml-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded bg-foreground">
-            <Trophy className="h-3 w-3 text-background" />
+          <div className="flex h-6 w-6 items-center justify-center">
+            <WorldCupIcon size={16} className="text-foreground" />
           </div>
           <span className="font-semibold text-sm">KickIQ</span>
         </Link>
