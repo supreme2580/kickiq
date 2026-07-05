@@ -32,12 +32,12 @@ export function Sidebar() {
   ]
 
   const fullSidebar = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
       <div className="p-3 space-y-3">
         <Link
           href="/"
           onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           <Plus className="h-4 w-4 shrink-0" />
           <span>New chat</span>
@@ -65,7 +65,7 @@ export function Sidebar() {
                     className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors group"
                   >
                     <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate text-left flex-1">{chat.title}</span>
+                    <span className="truncate text-left flex-1 min-w-0">{chat.title}</span>
                     <Trash2 className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                   </button>
                 ))}
@@ -78,7 +78,7 @@ export function Sidebar() {
         <Link
           href="/premium"
           onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           <Trophy className="h-4 w-4 shrink-0" />
           <span>Premium</span>
@@ -86,7 +86,7 @@ export function Sidebar() {
         <Link
           href="/about"
           onClick={() => { setSidebarOpen(false); setMobileOpen(false) }}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
           <Settings className="h-4 w-4 shrink-0" />
           <span>About KickIQ</span>
@@ -111,7 +111,7 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop: collapsed sidebar (icons only) — always visible */}
-      <aside className="hidden md:flex flex-col border-r border-border bg-sidebar shrink-0 w-14 z-30">
+      <aside className="hidden md:flex flex-col border-r border-border bg-sidebar shrink-0 w-14 z-30 overflow-hidden">
         <div className="flex flex-col h-full items-center py-3 px-2 space-y-3">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -149,7 +149,7 @@ export function Sidebar() {
               animate={{ x: 0 }}
               exit={{ x: -256 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-64 border-r border-border bg-sidebar shadow-xl"
+              className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-64 border-r border-border bg-sidebar shadow-xl overflow-hidden"
             >
               {fullSidebar}
             </motion.aside>
