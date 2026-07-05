@@ -1,85 +1,155 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+"use client"
 
-export default async function TeamPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
+import { useParams } from "next/navigation"
+import { ArrowLeft, Trophy, Users, Target, Shield, Zap } from "lucide-react"
+import Link from "next/link"
+
+const MOCK_TEAMS: Record<string, {
+  name: string
+  group: string
+  rank: number
+  coach: string
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  gf: number
+  ga: number
+  topScorers: { name: string; goals: number }[]
+  recentForm: string[]
+  nextMatch: { opponent: string; date: string; stage: string }
+}> = {
+  "1": {
+    name: "Brazil",
+    group: "Group A",
+    rank: 1,
+    coach: "Dorival Júnior",
+    played: 3,
+    won: 3,
+    drawn: 0,
+    lost: 0,
+    gf: 9,
+    ga: 2,
+    topScorers: [
+      { name: "Vinícius Jr.", goals: 3 },
+      { name: "Rodrygo", goals: 2 },
+      { name: "Richarlison", goals: 2 },
+    ],
+    recentForm: ["W", "W", "W"],
+    nextMatch: { opponent: "Netherlands", date: "July 9", stage: "Semi Final" },
+  },
+}
+
+export default function TeamPage() {
+  const params = useParams()
+  const team = MOCK_TEAMS[params.id as string] || MOCK_TEAMS["1"]
 
   return (
-    <div className="container py-8 space-y-6 animate-in">
-      <Link
-        href="/standings"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <Link href="/standings" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
         Back to Standings
       </Link>
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Brazil</h1>
-        <p className="text-muted-foreground mt-1">FIFA Ranking: #5</p>
+      <div className="rounded-xl border border-border bg-card p-8 space-y-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">{team.name}</h1>
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>{team.group}</span>
+              <span className="text-border">|</span>
+              <span>FIFA Rank: #{team.rank}</span>
+              <span className="text-border">|</span>
+              <span>Coach: {team.coach}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-5 gap-4 text-center">
+          {[
+            { label: "Played", value: team.played },
+            { label: "Won", value: team.won },
+            { label: "Drawn", value: team.drawn },
+            { label: "Lost", value: team.lost },
+            { label: "Points", value: team.won * 3 + team.drawn },
+          ].map((stat) => (
+            <div key={stat.label} className="space-y-1">
+              <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="rounded-lg bg-accent p-3">
+            <p className="text-xs text-muted-foreground">Goals For</p>
+            <p className="text-xl font-bold">{team.gf}</p>
+          </div>
+          <div className="rounded-lg bg-accent p-3">
+            <p className="text-xs text-muted-foreground">Goals Against</p>
+            <p className="text-xl font-bold">{team.ga}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
-        <Card className="border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card transition-colors">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Recent Form</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-1.5">
-              {["W", "W", "W", "D", "W"].map((r, i) => (
+      <div className="grid md:grid-cols-2 gap-6">
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Top Scorers</h2>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+            {team.topScorers.map((player, i) => (
+              <div key={player.name} className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-accent/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground font-medium w-4">{i + 1}</span>
+                  <span className="text-sm font-medium">{player.name}</span>
+                </div>
+                <span className="text-sm font-bold tabular-nums">{player.goals}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Recent Form</h2>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex gap-2">
+              {team.recentForm.map((result, i) => (
                 <span
                   key={i}
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold ${
-                    r === "W"
-                      ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                      : r === "D"
-                        ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
-                        : "bg-red-500/20 text-red-600 dark:text-red-400"
+                  className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${
+                    result === "W" ? "bg-foreground text-background" : "bg-accent text-muted-foreground"
                   }`}
                 >
-                  {r}
+                  {result}
                 </span>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card transition-colors">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Tournament Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            {[
-              { label: "Played", value: "3" },
-              { label: "Wins", value: "3", highlight: true },
-              { label: "Goals For", value: "9", highlight: true },
-              { label: "Goals Against", value: "2" },
-            ].map((stat) => (
-              <div key={stat.label} className="flex justify-between">
-                <span className="text-muted-foreground">{stat.label}</span>
-                <span className={`font-semibold tabular-nums ${stat.highlight ? "text-primary" : ""}`}>{stat.value}</span>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/40 bg-gradient-to-br from-primary/[0.03] to-accent/[0.03]">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Next Match</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="font-semibold text-lg">vs Netherlands</p>
-            <p className="text-muted-foreground">Jul 10, 2026 — 18:00 UTC</p>
-            <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">Round of 16</Badge>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
+
+      {team.nextMatch && (
+        <div className="rounded-xl border border-border bg-card p-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Zap className="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p className="text-sm font-medium">Next Match: {team.name} vs {team.nextMatch.opponent}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{team.nextMatch.date} · {team.nextMatch.stage}</p>
+            </div>
+          </div>
+          <Link
+            href="/fixtures"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            View →
+          </Link>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,74 +1,93 @@
 "use client"
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ThemeToggle } from "@/components/layout/theme-toggle"
-import { Settings, ExternalLink } from "lucide-react"
+import { useState } from "react"
+import { Wallet, Bell, Key, CircleHelp, ChevronRight } from "lucide-react"
+import { WalletButton } from "@/components/injective/wallet-button"
+
+const SECTIONS = [
+  {
+    title: "Account",
+    items: [
+      { icon: Wallet, label: "Wallet", description: "Connect Keplr or Leap wallet", action: <WalletButton /> },
+      { icon: Bell, label: "Notifications", description: "Manage alerts and updates" },
+      { icon: Key, label: "API Keys", description: "Configure external API keys" },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      { icon: CircleHelp, label: "Help & Feedback", description: "Get help or report issues" },
+    ],
+  },
+]
+
+const NOTIFICATION_SETTINGS = [
+  { label: "Match reminders", enabled: true },
+  { label: "Goal alerts", enabled: true },
+  { label: "AI predictions", enabled: false },
+  { label: "Premium updates", enabled: false },
+]
 
 export default function SettingsPage() {
+  const [notifications, setNotifications] = useState(NOTIFICATION_SETTINGS)
+
+  function toggleNotification(index: number) {
+    setNotifications((prev) =>
+      prev.map((n, i) => (i === index ? { ...n, enabled: !n.enabled } : n))
+    )
+  }
+
   return (
-    <div className="container py-8 max-w-2xl space-y-8 animate-in">
+    <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your preferences</p>
+        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
       </div>
 
-      <Card className="border-border/40 bg-card-premium shadow-glass">
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="font-semibold">Appearance</h3>
-              <p className="text-sm text-muted-foreground">Toggle dark mode</p>
+      {SECTIONS.map((section) => (
+        <section key={section.title} className="space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{section.title}</h2>
+          <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+            {section.items.map((item) => (
+              <div key={item.label} className="flex items-center justify-between px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+                    <item.icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{item.label}</p>
+                    <p className="text-xs text-muted-foreground">{item.description}</p>
+                  </div>
+                </div>
+                {item.action || <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Notifications</h2>
+        <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+          {notifications.map((notif, i) => (
+            <div key={notif.label} className="flex items-center justify-between px-5 py-4">
+              <span className="text-sm font-medium">{notif.label}</span>
+              <button
+                onClick={() => toggleNotification(i)}
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  notif.enabled ? "bg-foreground" : "bg-muted"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-background transition-transform ${
+                    notif.enabled ? "translate-x-5" : ""
+                  }`}
+                />
+              </button>
             </div>
-            <ThemeToggle />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-        <CardContent className="pt-6 space-y-4">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold">API Configuration</h3>
-          </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Set your API keys in <code className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">.env.local</code> to enable live data
-          </p>
-          <div className="bg-muted/50 rounded-xl p-4 text-xs space-y-1.5 font-mono border border-border/40">
-            <p className="text-primary font-semibold text-[11px] uppercase tracking-wider mb-2">Required Variables</p>
-            <p>OPENAI_API_KEY=sk-...</p>
-            <p>API_FOOTBALL_KEY=...</p>
-            <p className="text-primary font-semibold text-[11px] uppercase tracking-wider mt-3 mb-2">Optional</p>
-            <p>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...</p>
-            <p>INJECTIVE_RPC_URL=https://injective-rpc.publicnode.com</p>
-            <p>NEXT_PUBLIC_X402_FACILITATOR_URL=...</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-        <CardContent className="pt-6 space-y-4">
-          <h3 className="font-semibold">About</h3>
-          <div className="text-sm text-muted-foreground space-y-1 leading-relaxed">
-            <p><span className="font-medium text-foreground">KickIQ</span> — AI Copilot for the FIFA World Cup</p>
-            <p>Built for the Injective Global Cup Hackathon 2026</p>
-            <p>Version 1.0.0</p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm" className="gap-1.5">
-                Dashboard <ExternalLink className="h-3 w-3" />
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="outline" size="sm" className="gap-1.5">
-                AI Chat <ExternalLink className="h-3 w-3" />
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }

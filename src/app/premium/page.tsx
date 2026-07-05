@@ -1,62 +1,93 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { PaymentFlow } from "@/components/premium/payment-flow"
-import { Bot, Shield, Zap, Sparkles } from "lucide-react"
+"use client"
 
-const PREMIUM_FEATURES = [
+import { Zap, Bot, Shield, TrendingUp, ArrowRight } from "lucide-react"
+import Link from "next/link"
+
+const FEATURES = [
   {
     title: "Advanced AI Reports",
     description: "Deep tactical analysis for every match — formations, pressing patterns, and weaknesses.",
     icon: Bot,
-    gradient: "from-primary/20 to-transparent",
   },
   {
     title: "Match Simulations",
     description: "AI-powered match simulations showing likely outcomes and key scenarios.",
-    icon: Zap,
-    gradient: "from-accent/20 to-transparent",
+    icon: TrendingUp,
   },
   {
     title: "Tactical Breakdowns",
     description: "Professional-grade tactical analysis of team strategies and formations.",
     icon: Shield,
-    gradient: "from-primary/20 to-transparent",
   },
+]
+
+const BENEFITS = [
+  "Unlimited AI predictions",
+  "Deep tactical analysis per match",
+  "Match simulations with probability trees",
+  "Exclusive premium insights feed",
+  "Cross-chain USDC payments via Injective",
+  "Support future development",
 ]
 
 export default function PremiumPage() {
   return (
-    <div className="container py-8 space-y-8 animate-in">
-      <div className="text-center space-y-4 max-w-2xl mx-auto">
-        <Badge variant="outline" className="border-primary/20 bg-primary/5 text-primary gap-1.5 px-4 py-1.5">
-          <Sparkles className="h-3.5 w-3.5" />
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-12">
+      <div className="text-center space-y-4 max-w-2xl mx-auto pt-8">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border text-xs text-muted-foreground">
+          <Zap className="h-3 w-3" />
           Powered by Injective
-        </Badge>
+        </div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-          Premium <span className="text-gradient">Insights</span>
+          Premium Insights
         </h1>
         <p className="text-muted-foreground text-lg max-w-md mx-auto">
           Unlock advanced AI analysis powered by Injective x402 and USDC CCTP.
         </p>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        {PREMIUM_FEATURES.map((feature) => (
-          <Card key={feature.title} className="group relative overflow-hidden border-border/40 bg-card-premium hover:shadow-premium transition-all duration-300">
-            <div className={`absolute inset-0 bg-gradient-to-b ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-            <CardHeader className="relative">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent/50 shadow-sm mb-2">
-                <feature.icon className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <CardTitle className="text-lg">{feature.title}</CardTitle>
-              <CardDescription>{feature.description}</CardDescription>
-            </CardHeader>
-          </Card>
+      <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        {FEATURES.map((feature) => (
+          <div key={feature.title} className="rounded-xl border border-border bg-card p-6 space-y-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
+              <feature.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold">{feature.title}</h3>
+              <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{feature.description}</p>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="max-w-md mx-auto">
-        <PaymentFlow />
+      <div className="max-w-lg mx-auto space-y-6">
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+          <h2 className="font-semibold">What's Included</h2>
+          <ul className="space-y-2.5">
+            {BENEFITS.map((benefit) => (
+              <li key={benefit} className="flex items-start gap-3 text-sm text-muted-foreground">
+                <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-foreground shrink-0" />
+                {benefit}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-xl border border-border bg-card p-6 space-y-4 text-center">
+          <div className="space-y-1">
+            <p className="text-2xl font-bold">0.50 USDC</p>
+            <p className="text-sm text-muted-foreground">per analysis</p>
+          </div>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            Connect Wallet <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="text-xs text-muted-foreground">
+            Pay with USDC via Injective x402 or CCTP
+          </p>
+        </div>
       </div>
     </div>
   )

@@ -1,157 +1,215 @@
-import { MatchCard } from "@/components/match/match-card"
-import { TeamCard } from "@/components/team/team-card"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Trophy, Bell, Zap } from "lucide-react"
+"use client"
+
+import { motion } from "framer-motion"
+import { MessageSquare, BarChart3, Trophy, Zap, TrendingUp, Users, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
-const MOCK_FIXTURES = [
-  {
-    fixture: { id: 1, date: "2026-07-04T18:00:00Z", status: { short: "LIVE", elapsed: 67 }, venue: { name: "Lusail Stadium" } },
-    league: { id: 1, season: 2026 },
-    teams: { home: { id: 1, name: "Brazil", logo: "" }, away: { id: 2, name: "Argentina", logo: "" } },
-    goals: { home: 2, away: 1 },
-    score: { halftime: { home: 1, away: 0 }, fulltime: { home: null, away: null } },
-  },
-  {
-    fixture: { id: 2, date: "2026-07-04T21:00:00Z", status: { short: "NS", elapsed: null }, venue: { name: "Al Bayt Stadium" } },
-    league: { id: 1, season: 2026 },
-    teams: { home: { id: 3, name: "Spain", logo: "" }, away: { id: 4, name: "France", logo: "" } },
-    goals: { home: null, away: null },
-    score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
-  },
-  {
-    fixture: { id: 3, date: "2026-07-04T16:00:00Z", status: { short: "FT", elapsed: null }, venue: { name: "Khalifa Stadium" } },
-    league: { id: 1, season: 2026 },
-    teams: { home: { id: 5, name: "Germany", logo: "" }, away: { id: 6, name: "Portugal", logo: "" } },
-    goals: { home: 3, away: 2 },
-    score: { halftime: { home: 1, away: 1 }, fulltime: { home: 3, away: 2 } },
-  },
-  {
-    fixture: { id: 7, date: "2026-07-04T17:00:00Z", status: { short: "LIVE", elapsed: 32 }, venue: { name: "Stadium 974" } },
-    league: { id: 1, season: 2026 },
-    teams: { home: { id: 13, name: "Netherlands", logo: "" }, away: { id: 14, name: "England", logo: "" } },
-    goals: { home: 0, away: 0 },
-    score: { halftime: { home: null, away: null }, fulltime: { home: null, away: null } },
-  },
+const LIVE_MATCHES = [
+  { home: "Brazil", away: "Argentina", score: "2-1", time: "67'" },
+  { home: "Netherlands", away: "England", score: "0-0", time: "32'" },
+]
+
+const UPCOMING_MATCHES = [
+  { home: "Spain", away: "France", time: "21:00", stage: "Quarter Final" },
+  { home: "Germany", away: "Portugal", time: "18:00", stage: "Quarter Final" },
+]
+
+const TOP_SCORERS = [
+  { name: "Kylian Mbappé", goals: 5, team: "France" },
+  { name: "Lionel Messi", goals: 4, team: "Argentina" },
+  { name: "Harry Kane", goals: 4, team: "England" },
 ]
 
 export default function DashboardPage() {
   return (
-    <div className="container py-8 space-y-8 animate-in">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Today&apos;s World Cup action</p>
+          <p className="text-muted-foreground mt-1">Your World Cup overview</p>
         </div>
+        <Link
+          href="/chat"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Ask AI
+        </Link>
+      </div>
+
+      {/* Live Matches */}
+      <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 border-green-500/20 text-green-600 dark:text-green-400 bg-green-500/10">
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-            2 Live
-          </Badge>
-          <Link href="/fixtures">
-            <Badge variant="secondary" className="px-3 py-1.5 cursor-pointer hover:bg-accent transition-colors">
-              View All
-            </Badge>
+          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+          <h2 className="text-lg font-semibold">Live Matches</h2>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {LIVE_MATCHES.map((match) => (
+            <Link key={match.home} href="/match/1">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl border border-border bg-card p-5 space-y-4 hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                    Live
+                  </span>
+                  <span>{match.time}</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-medium flex-1 text-right">{match.home}</span>
+                  <span className="text-2xl font-bold tabular-nums">{match.score}</span>
+                  <span className="text-sm font-medium flex-1">{match.away}</span>
+                </div>
+              </motion.div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* AI Insights */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">AI Insights</h2>
+          </div>
+          <Link href="/chat" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            View all →
           </Link>
         </div>
-      </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">Brazil 2 - 1 Argentina (67')</p>
+            <p className="text-sm leading-relaxed">
+              Brazil dominating possession (62%). Argentina needs tactical adjustment.
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">Up Next: Spain vs France</p>
+            <p className="text-sm leading-relaxed">
+              Spain favored (58% win probability).
+            </p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+            <p className="text-xs text-muted-foreground">Top Scorer Watch</p>
+            <p className="text-sm leading-relaxed">
+              Mbappé leads with 5 goals. Could break the record.
+            </p>
+          </div>
+        </div>
+      </section>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {MOCK_FIXTURES.slice(0, 4).map((fixture) => (
-          <MatchCard key={fixture.fixture.id} fixture={fixture as any} />
-        ))}
-      </div>
+      {/* Upcoming Matches */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Today's Matches</h2>
+          </div>
+          <Link href="/fixtures" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            View all →
+          </Link>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {UPCOMING_MATCHES.map((match) => (
+            <Link key={match.home} href="/fixtures">
+              <div className="rounded-xl border border-border bg-card p-4 flex items-center justify-between hover:bg-accent/50 transition-colors">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">{match.home} vs {match.away}</p>
+                  <p className="text-xs text-muted-foreground">{match.stage}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{match.time}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border-border/40 bg-card-premium shadow-glass">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Trophy className="h-5 w-5 text-primary" />
-              Group A Standings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="divide-y divide-border/40">
+      {/* Standings & Top Scorers */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">Standings</h2>
+            </div>
+            <Link href="/standings" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              View all →
+            </Link>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="space-y-1">
+              <div className="flex items-center text-xs text-muted-foreground px-2 py-1">
+                <span className="w-6">#</span>
+                <span className="flex-1">Team</span>
+                <span className="w-8 text-center">P</span>
+                <span className="w-10 text-right">Pts</span>
+              </div>
               {[
-                { pos: 1, name: "Brazil", pts: 9, gd: 7, form: "WWWW" },
-                { pos: 2, name: "Netherlands", pts: 6, gd: 3, form: "WLWW" },
-                { pos: 3, name: "Senegal", pts: 3, gd: -2, form: "LWLW" },
-                { pos: 4, name: "Cameroon", pts: 0, gd: -8, form: "LLLL" },
-              ].map((row) => (
-                <div key={row.name} className="flex items-center justify-between py-3 text-sm">
-                  <div className="flex items-center gap-3">
-                    <span className={`font-bold w-6 text-center ${
-                      row.pos <= 2 ? "text-primary" : "text-muted-foreground"
-                    }`}>
-                      {row.pos}
-                    </span>
-                    <span className="font-medium">{row.name}</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex gap-0.5">
-                      {row.form.split("").map((r: string, i: number) => (
-                        <span key={i} className={`w-4 h-4 rounded text-[9px] font-bold flex items-center justify-center ${
-                          r === "W" ? "bg-green-500/20 text-green-600 dark:text-green-400" : "bg-red-500/20 text-red-600 dark:text-red-400"
-                        }`}>
-                          {r}
-                        </span>
-                      ))}
-                    </div>
-                    <span className="text-muted-foreground tabular-nums">GD: {row.gd > 0 ? `+${row.gd}` : row.gd}</span>
-                    <span className="font-bold tabular-nums min-w-[3rem] text-right">{row.pts} pts</span>
-                  </div>
+                { pos: 1, name: "Brazil", pts: 9, p: 3 },
+                { pos: 2, name: "Netherlands", pts: 6, p: 3 },
+                { pos: 3, name: "Senegal", pts: 3, p: 3 },
+                { pos: 4, name: "Cameroon", pts: 0, p: 3 },
+              ].map((team) => (
+                <div key={team.name} className="flex items-center text-sm px-2 py-1.5 rounded-lg hover:bg-accent/50 transition-colors">
+                  <span className={`w-6 font-medium ${team.pos <= 2 ? "text-foreground" : "text-muted-foreground"}`}>
+                    {team.pos}
+                  </span>
+                  <span className="flex-1 font-medium">{team.name}</span>
+                  <span className="w-8 text-center text-muted-foreground tabular-nums">{team.p}</span>
+                  <span className="w-10 text-right font-bold tabular-nums">{team.pts}</span>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
-        <div className="space-y-4">
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Zap className="h-4 w-4 text-primary" />
-                AI Quick Insights
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="p-3 rounded-xl bg-primary/5 border border-primary/10 space-y-1">
-                <p className="text-xs font-semibold text-primary">Brazil 2 - 1 Argentina (67&apos;)</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Brazil dominating possession (62%). Argentina needs tactical adjustment.
-                </p>
-              </div>
-              <div className="p-3 rounded-xl bg-accent/5 border border-accent/10 space-y-1">
-                <p className="text-xs font-semibold text-accent">Up Next: Spain vs France</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Spain favored (58% win probability).
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Bell className="h-4 w-4 text-primary" />
-                Latest Updates
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {[
-                { time: "67'", event: "Goal! Brazil 2-1 Argentina" },
-                { time: "55'", event: "Yellow card - Argentina" },
-                { time: "32'", event: "Goal! Netherlands 0-0 England" },
-              ].map((update) => (
-                <div key={update.time} className="flex gap-2 text-xs">
-                  <span className="font-bold text-primary tabular-nums shrink-0">{update.time}</span>
-                  <span className="text-muted-foreground">{update.event}</span>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">Top Scorers</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">Golden Boot race</span>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <div className="space-y-2">
+              {TOP_SCORERS.map((player, i) => (
+                <div key={player.name} className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-accent/50 transition-colors">
+                  <span className="text-xs text-muted-foreground font-medium w-4 text-center">{i + 1}</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{player.name}</p>
+                    <p className="text-xs text-muted-foreground">{player.team}</p>
+                  </div>
+                  <span className="text-lg font-bold tabular-nums">{player.goals}</span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {/* Premium Callout */}
+      <div className="rounded-xl border border-border bg-card p-6 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-foreground">
+            <Zap className="h-5 w-5 text-background" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Unlock Premium Insights</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Deep tactical analysis powered by Injective</p>
+          </div>
         </div>
+        <Link
+          href="/premium"
+          className="flex items-center gap-1 px-4 py-2 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
+        >
+          Upgrade <ArrowRight className="h-3 w-3" />
+        </Link>
       </div>
     </div>
   )

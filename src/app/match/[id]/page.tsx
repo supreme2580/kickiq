@@ -1,145 +1,143 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { ArrowLeft, Bot } from "lucide-react"
+"use client"
 
-export default async function MatchPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
-  const { id } = await params
+import { useParams } from "next/navigation"
+import { ArrowLeft, Clock, MapPin, Bot, BarChart3, Users, Trophy } from "lucide-react"
+import Link from "next/link"
+
+const MOCK_MATCH = {
+  id: 1,
+  homeTeam: "Spain",
+  awayTeam: "Brazil",
+  homeScore: 2,
+  awayScore: 1,
+  status: "FT",
+  stage: "Quarter Final",
+  venue: "Lusail Stadium",
+  date: "July 4, 2026",
+  attendance: "88,966",
+  possession: { home: 58, away: 42 },
+  shots: { home: 14, away: 8 },
+  shotsOnTarget: { home: 6, away: 3 },
+  corners: { home: 7, away: 4 },
+  fouls: { home: 10, away: 14 },
+  yellowCards: { home: 2, away: 3 },
+  redCards: { home: 0, away: 0 },
+  timeline: [
+    { minute: 23, event: "Goal", team: "home", description: "Pedri scores from outside the box" },
+    { minute: 45, event: "Yellow Card", team: "away", description: "Marquinhos" },
+    { minute: 58, event: "Goal", team: "home", description: "Morata header from a corner" },
+    { minute: 72, event: "Goal", team: "away", description: "Vinícius Jr. slots it home" },
+    { minute: 85, event: "Yellow Card", team: "home", description: "Laporte" },
+  ],
+}
+
+export default function MatchPage() {
+  const params = useParams()
+  const match = MOCK_MATCH
 
   return (
-    <div className="container py-8 space-y-6 animate-in">
-      <Link
-        href="/dashboard"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-      >
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+      <Link href="/dashboard" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <ArrowLeft className="h-4 w-4" />
-        Back to Dashboard
+        Back
       </Link>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Brazil vs Argentina</h1>
-          <p className="text-muted-foreground mt-1">World Cup 2026 — Group A</p>
+      {/* Match Header */}
+      <div className="rounded-xl border border-border bg-card p-8 text-center space-y-6">
+        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+          <Trophy className="h-3 w-3" />
+          <span>{match.stage}</span>
+          <span className="text-border">|</span>
+          <MapPin className="h-3 w-3" />
+          <span>{match.venue}</span>
         </div>
-        <Badge className="gap-1.5 px-3 py-1.5 border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/10 border-0">
-          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-          Live
-        </Badge>
+
+        <div className="flex items-center justify-center gap-8 md:gap-16">
+          <div className="flex-1 text-right">
+            <p className="text-lg md:text-xl font-semibold">{match.homeTeam}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-5xl md:text-7xl font-bold tabular-nums">{match.homeScore}</span>
+            <span className="text-xl text-muted-foreground">-</span>
+            <span className="text-5xl md:text-7xl font-bold tabular-nums">{match.awayScore}</span>
+          </div>
+          <div className="flex-1">
+            <p className="text-lg md:text-xl font-semibold">{match.awayTeam}</p>
+          </div>
+        </div>
+
+        <div className="text-sm text-muted-foreground">
+          {match.date} · {match.attendance} attendance
+        </div>
       </div>
 
-      <Card className="py-12 border-border/40 bg-card-premium shadow-glass relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-accent/[0.02]" />
-        <CardContent className="relative flex items-center justify-center gap-8 md:gap-16">
-          <div className="text-center space-y-2">
-            <p className="text-xl font-bold">Brazil</p>
-            <p className="text-5xl md:text-7xl font-bold tabular-nums">2</p>
-          </div>
-          <div className="text-center">
-            <p className="text-3xl md:text-5xl font-bold text-muted-foreground/30">:</p>
-            <p className="text-sm text-muted-foreground mt-2 font-medium">67&apos;</p>
-          </div>
-          <div className="text-center space-y-2">
-            <p className="text-xl font-bold">Argentina</p>
-            <p className="text-5xl md:text-7xl font-bold tabular-nums">1</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-lg">Match Statistics</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            {[
-              { label: "Possession", home: "62%", away: "38%" },
-              { label: "Shots", home: "14", away: "8" },
-              { label: "Shots on Target", home: "6", away: "3" },
-              { label: "xG", home: "2.1", away: "0.8" },
-              { label: "Corners", home: "7", away: "3" },
-              { label: "Fouls", home: "8", away: "12" },
-            ].map((stat) => {
-              const homeVal = parseInt(stat.home)
-              const awayVal = parseInt(stat.away)
-              const total = homeVal + awayVal
-              const homePct = total > 0 ? (homeVal / total) * 100 : 50
-              return (
-                <div key={stat.label}>
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="font-semibold tabular-nums">{stat.home}</span>
-                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{stat.label}</span>
-                    <span className="font-semibold tabular-nums">{stat.away}</span>
-                  </div>
-                  <div className="flex h-1.5 rounded-full overflow-hidden bg-muted/50">
-                    <div
-                      className="bg-gradient-to-r from-primary to-primary/60 transition-all rounded-l-full"
-                      style={{ width: `${homePct}%` }}
-                    />
-                    <div
-                      className="bg-gradient-to-l from-accent to-accent/60 transition-all rounded-r-full"
-                      style={{ width: `${100 - homePct}%` }}
-                    />
-                  </div>
-                </div>
-              )
-            })}
-          </CardContent>
-        </Card>
-
-        <div className="space-y-4">
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-lg">AI Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Brazil is dominating with 62% possession and creating quality chances
-                (2.1 xG). Argentina&apos;s defense is struggling to contain Brazil&apos;s
-                attacking transitions.
-              </p>
-              <div className="space-y-2">
-                <h4 className="text-sm font-semibold">Prediction Update</h4>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5">Brazil: 72%</Badge>
-                  <Badge variant="outline" className="border-yellow-500/20 text-yellow-600 dark:text-yellow-400 bg-yellow-500/5">Draw: 15%</Badge>
-                  <Badge variant="outline" className="border-accent/20 text-accent bg-accent/5">Argentina: 13%</Badge>
-                </div>
+      {/* Timeline */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Timeline</h2>
+        <div className="rounded-xl border border-border bg-card p-5 space-y-3">
+          {match.timeline.map((event, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <div className="flex flex-col items-center">
+                <span className={`text-xs font-bold tabular-nums ${event.team === "home" ? "text-foreground" : "text-muted-foreground"}`}>
+                  {event.minute}'
+                </span>
+                {i < match.timeline.length - 1 && <div className="w-px h-6 bg-border mt-1" />}
               </div>
-              <Link href="/premium">
-                <Button variant="outline" size="sm" className="gap-2 w-full border-primary/20 hover:bg-primary/5">
-                  <Bot className="h-4 w-4" />
-                  Unlock Premium Analysis
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/40 bg-card/50 backdrop-blur-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm">Match Events</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {[
-                { time: "55'", event: "🔴 Yellow Card", team: "Argentina" },
-                { time: "42'", event: "⚽ Goal", team: "Brazil - Neymar" },
-                { time: "28'", event: "⚽ Goal", team: "Argentina - Messi" },
-                { time: "12'", event: "⚽ Goal", team: "Brazil - Vinicius Jr" },
-              ].map((evt) => (
-                <div key={evt.time} className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 text-sm">
-                  <span className="font-bold tabular-nums text-primary text-xs">{evt.time}</span>
-                  <span className="text-muted-foreground">{evt.event}</span>
-                  <span className="ml-auto text-xs font-medium">{evt.team}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+              <div className={`text-sm ${event.team === "home" ? "" : "text-right flex-1"}`}>
+                <span className={event.event === "Goal" ? "font-semibold" : "text-muted-foreground"}>{event.event}</span>
+                <p className="text-xs text-muted-foreground">{event.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      </section>
+
+      {/* Statistics */}
+      <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Statistics</h2>
+        <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+          {[
+            { label: "Possession", home: match.possession.home, away: match.possession.away, unit: "%" },
+            { label: "Total Shots", home: match.shots.home, away: match.shots.away, unit: "" },
+            { label: "Shots on Target", home: match.shotsOnTarget.home, away: match.shotsOnTarget.away, unit: "" },
+            { label: "Corners", home: match.corners.home, away: match.corners.away, unit: "" },
+            { label: "Fouls", home: match.fouls.home, away: match.fouls.away, unit: "" },
+          ].map((stat) => (
+            <div key={stat.label} className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="font-medium">{stat.home}{stat.unit}</span>
+                <span className="text-[10px] uppercase tracking-wider">{stat.label}</span>
+                <span className="font-medium">{stat.away}{stat.unit}</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden flex">
+                <div className="bg-foreground transition-all" style={{ width: `${(stat.home / (stat.home + stat.away)) * 100}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* AI Summary */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Bot className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">AI Summary</h2>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-5">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Spain dominated possession (58%) and created more chances throughout the match. Pedri's opener in the 23rd minute set the tone, and Morata's header just before the hour mark doubled the lead. Brazil fought back through Vinícius Jr. in the 72nd minute but couldn't find an equalizer. Spain's defensive organization was key, limiting Brazil to just 3 shots on target.
+          </p>
+        </div>
+      </section>
+
+      {/* Prediction */}
+      <section className="rounded-xl border border-border bg-card p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold">Pre-match Prediction</h2>
+        </div>
+        <p className="text-xs text-muted-foreground">AI predicted: Spain 58% win probability · Confidence: High</p>
+      </section>
     </div>
   )
 }

@@ -1,203 +1,107 @@
 "use client"
 
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { ArrowUp, Trophy, BarChart3, Zap, MessageSquare } from "lucide-react"
 import { motion } from "framer-motion"
-import { ArrowRight, Bot, Shield, Zap, Trophy, Sparkles, BarChart3 } from "lucide-react"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-}
+const SUGGESTED_PROMPTS = [
+  "Who will win today?",
+  "Show today's fixtures",
+  "Compare Brazil vs Argentina",
+  "Predict the World Cup winner",
+]
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: "easeOut" as const },
-  },
-}
+const FEATURES = [
+  { icon: MessageSquare, label: "AI Predictions", desc: "Win probabilities & tactical analysis" },
+  { icon: BarChart3, label: "Live Standings", desc: "Real-time group tables & stats" },
+  { icon: Trophy, label: "Match Coverage", desc: "Every World Cup fixture, live" },
+  { icon: Zap, label: "Premium Insights", desc: "Deep AI analysis via Injective" },
+]
 
 export default function LandingPage() {
+  const [input, setInput] = useState("")
+  const router = useRouter()
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!input.trim()) return
+    router.push(`/chat?q=${encodeURIComponent(input.trim())}`)
+  }
+
+  function handlePrompt(prompt: string) {
+    router.push(`/chat?q=${encodeURIComponent(prompt)}`)
+  }
+
   return (
-    <div className="flex flex-col">
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-background" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-accent/10 rounded-full blur-3xl" />
-
+    <div className="flex flex-col min-h-[calc(100vh-4rem)]">
+      <section className="flex-1 flex flex-col items-center justify-center px-6 py-16 md:py-24">
         <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="container relative py-24 md:py-36 text-center space-y-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-2xl w-full mx-auto text-center space-y-8"
         >
-          <motion.div variants={itemVariants} className="space-y-4 max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 text-sm text-primary font-medium">
-              <Sparkles className="h-4 w-4" />
-              Built for the Injective Global Cup 2026
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border text-xs text-muted-foreground">
+              <Trophy className="h-3 w-3" />
+              AI Copilot for the FIFA World Cup
             </div>
-            <h1 className="text-4xl md:text-7xl font-bold tracking-tight leading-tight">
-              Your AI Copilot for{" "}
-              <span className="text-gradient">Every World Cup Match</span>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]">
+              KickIQ
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Predictions, live scores, standings, and premium AI insights —
-              powered by Injective&apos;s x402, CCTP, and Agent Skills.
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mx-auto">
+              Your AI Copilot for Every World Cup Match.
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div variants={itemVariants} className="flex flex-wrap justify-center gap-4">
-            <Link href="/dashboard">
-              <Button size="lg" className="gap-2 h-12 px-8 text-base shadow-premium">
-                Get Started <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/chat">
-              <Button variant="outline" size="lg" className="h-12 px-8 text-base border-primary/20 hover:bg-primary/5">
-                Try AI Chat
-              </Button>
-            </Link>
-          </motion.div>
+          <form onSubmit={handleSubmit} className="relative">
+            <div className="relative">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask anything about the World Cup..."
+                className="w-full h-14 px-5 pr-14 rounded-2xl border border-border bg-card text-foreground placeholder:text-muted-foreground/50 text-base focus:outline-none focus:border-muted-foreground/40 transition-colors"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-xl bg-foreground text-background disabled:opacity-30 transition-opacity"
+              >
+                <ArrowUp className="h-4 w-4" />
+              </button>
+            </div>
+          </form>
 
-          <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto pt-8">
-            {[
-              { label: "Live Scores", value: "Real-time" },
-              { label: "AI Predictions", value: "90%+ accuracy" },
-              { label: "Teams", value: "32 nations" },
-              { label: "Premium Insights", value: "Injective x402" },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border/40">
-                <p className="text-2xl font-bold text-gradient">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-              </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {SUGGESTED_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                onClick={() => handlePrompt(prompt)}
+                className="px-3.5 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+              >
+                {prompt}
+              </button>
             ))}
-          </motion.div>
+          </div>
         </motion.div>
       </section>
 
-      <section className="border-t border-border/40 py-20">
-        <div className="container space-y-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center space-y-4"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Powered by <span className="text-gradient">Injective</span>
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Every premium feature is secured by Injective&apos;s newest technologies.
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto"
-          >
-            {[
-              {
-                icon: Zap,
-                title: "x402 — Premium Access",
-                desc: "Pay-per-request AI analysis. Unlock tactical breakdowns, match simulations, and advanced predictions with USDC.",
-                gradient: "from-primary/20 to-transparent",
-              },
-              {
-                icon: Shield,
-                title: "USDC CCTP — Cross-Chain",
-                desc: "Seamless premium subscriptions via cross-chain USDC transfers using Circle's CCTP protocol.",
-                gradient: "from-accent/20 to-transparent",
-              },
-              {
-                icon: Bot,
-                title: "Agent Skills — AI Agents",
-                desc: "Specialized agents for match prediction, tactical analysis, game summaries, and fantasy advice.",
-                gradient: "from-primary/20 to-transparent",
-              },
-            ].map((feature, i) => (
-              <motion.div key={feature.title} variants={itemVariants}>
-                <Card className="group relative overflow-hidden border-border/40 bg-card-premium hover:shadow-premium transition-all duration-300">
-                  <div className={`absolute inset-0 bg-gradient-to-b ${feature.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                  <CardContent className="relative p-6 space-y-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent/50 shadow-sm">
-                      <feature.icon className="h-6 w-6 text-primary-foreground" />
-                    </div>
-                    <h3 className="font-semibold text-lg">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+      <section className="border-t border-border">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {FEATURES.map((feature) => (
+              <div key={feature.label} className="text-center space-y-2">
+                <div className="flex justify-center">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent">
+                    <feature.icon className="h-4 w-4" />
+                  </div>
+                </div>
+                <h3 className="text-sm font-medium">{feature.label}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{feature.desc}</p>
+              </div>
             ))}
-          </motion.div>
-        </div>
-      </section>
-
-      <section className="border-t border-border/40 py-20 bg-gradient-to-b from-background to-primary/[0.02]">
-        <div className="container space-y-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center space-y-4"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              Everything <span className="text-gradient">World Cup</span>
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              One intelligent assistant for every aspect of the tournament.
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto"
-          >
-            {[
-              { icon: Trophy, label: "Live Scores", desc: "Real-time match updates with stats" },
-              { icon: BarChart3, label: "AI Predictions", desc: "Win probability & tactical analysis" },
-              { icon: Shield, label: "Standings", desc: "Group tables & knockout brackets" },
-              { icon: Sparkles, label: "Team Comparison", desc: "Form, head-to-head & stats" },
-            ].map((item) => (
-              <motion.div key={item.label} variants={itemVariants}>
-                <Card className="border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-all duration-300">
-                  <CardContent className="p-6 text-center space-y-3">
-                    <div className="flex justify-center">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <item.icon className="h-5 w-5 text-primary" />
-                      </div>
-                    </div>
-                    <h3 className="font-semibold">{item.label}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center"
-          >
-            <Link href="/dashboard">
-              <Button size="lg" className="gap-2 h-12 px-8">
-                Explore Dashboard <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </motion.div>
+          </div>
         </div>
       </section>
     </div>
