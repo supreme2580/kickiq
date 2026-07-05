@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Plus, Search, MessageSquare, Settings, LogOut, Menu, Trophy, Trash2, PanelLeftClose, PanelLeft } from "lucide-react"
+import { Plus, Search, MessageSquare, Settings, LogOut, Menu, Trophy, Trash2, PanelLeftClose } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 
 const CHAT_HISTORY = [
   { id: "1", title: "Brazil vs Argentina prediction", date: "Today" },
@@ -30,7 +31,6 @@ export function Sidebar() {
     { label: "Older", items: filteredHistory.filter((c) => c.date !== "Today" && c.date !== "Yesterday") },
   ]
 
-  // Full sidebar content (used in both expanded desktop and mobile sheet)
   const fullSidebar = (
     <div className="flex flex-col h-full">
       <div className="p-3 space-y-3">
@@ -96,33 +96,13 @@ export function Sidebar() {
           <span>Log out</span>
         </button>
       </div>
-    </div>
-  )
-
-  const iconOnly = (
-    <div className="flex flex-col h-full items-center py-3 px-2 space-y-3">
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="flex items-center justify-center h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-      >
-        <Plus className="h-4 w-4" />
-      </button>
-      <div className="flex-1 flex flex-col items-center gap-1">
-        {CHAT_HISTORY.slice(0, 3).map((chat) => (
-          <button
-            key={chat.id}
-            className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-          >
-            <MessageSquare className="h-3.5 w-3.5" />
-          </button>
-        ))}
-      </div>
-      <div className="flex flex-col items-center gap-1 pt-3 border-t border-border w-full">
+      <div className="p-2 border-t border-border">
         <button
-          onClick={() => setSidebarOpen(true)}
-          className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          onClick={() => setSidebarOpen(false)}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
         >
-          <PanelLeft className="h-4 w-4" />
+          <PanelLeftClose className="h-4 w-4 shrink-0" />
+          <span>Close sidebar</span>
         </button>
       </div>
     </div>
@@ -130,31 +110,52 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Desktop: collapsed sidebar (icons only) */}
-      <aside className="hidden md:flex flex-col border-r border-border bg-sidebar shrink-0 w-14">
-        {iconOnly}
-      </aside>
-
-      {/* Desktop: expanded overlay sidebar */}
-      {sidebarOpen && (
-        <>
-          <div
-            className="hidden md:block fixed inset-0 z-40 bg-black/30"
-            onClick={() => setSidebarOpen(false)}
-          />
-          <aside className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-64 flex-col border-r border-border bg-sidebar shadow-xl animate-in">
-            <div className="flex items-center justify-end p-2">
+      {/* Desktop: collapsed sidebar (icons only) — always visible */}
+      <aside className="hidden md:flex flex-col border-r border-border bg-sidebar shrink-0 w-14 z-30">
+        <div className="flex flex-col h-full items-center py-3 px-2 space-y-3">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex items-center justify-center h-9 w-9 rounded-lg border border-border text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+          <div className="flex-1 flex flex-col items-center gap-1">
+            {CHAT_HISTORY.slice(0, 4).map((chat) => (
               <button
-                onClick={() => setSidebarOpen(false)}
+                key={chat.id}
                 className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
               >
-                <PanelLeftClose className="h-4 w-4" />
+                <MessageSquare className="h-3.5 w-3.5" />
               </button>
-            </div>
-            {fullSidebar}
-          </aside>
-        </>
-      )}
+            ))}
+          </div>
+        </div>
+      </aside>
+
+      {/* Desktop: expanded sidebar — slides in from the left */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="hidden md:block fixed inset-0 z-40 bg-black/50"
+              onClick={() => setSidebarOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: -256 }}
+              animate={{ x: 0 }}
+              exit={{ x: -256 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-64 border-r border-border bg-sidebar shadow-xl"
+            >
+              {fullSidebar}
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Mobile */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center h-12 border-b border-border bg-background px-3">
