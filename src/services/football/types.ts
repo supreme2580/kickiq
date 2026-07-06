@@ -60,14 +60,6 @@ export interface FootballLeague {
   }
 }
 
-export interface FootballStatistics {
-  team: { id: number; name: string; logo: string }
-  statistics: Array<{
-    type: string
-    value: string | number | null
-  }>
-}
-
 export interface FootballPrediction {
   predictions: {
     winner: { id: number | null; name: string | null }

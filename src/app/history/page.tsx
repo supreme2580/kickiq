@@ -11,7 +11,7 @@ export default function HistoryPage() {
       </div>
       <h1 className="text-xl font-semibold">Chat History</h1>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Your conversation history will appear here. Chat history is stored locally.
+        Your conversation history will appear here. Sign in to persist chats across sessions.
       </p>
       <Link
         href="/"

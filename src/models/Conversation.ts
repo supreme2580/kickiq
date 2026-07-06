@@ -3,7 +3,7 @@ import { Schema, model, models } from "mongoose"
 const MessageSchema = new Schema(
   {
     role: { type: String, enum: ["user", "assistant"], required: true },
-    content: { type: String, required: true },
+    content: { type: String, default: "" },
   },
   { _id: false }
 )

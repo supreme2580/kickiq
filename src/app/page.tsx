@@ -9,6 +9,7 @@ import { WorldCupIcon } from "@/components/icons/world-cup"
 import { PredictionCard } from "@/components/cards/prediction-card"
 import { StandingsCard } from "@/components/cards/standings-card"
 import { FixtureCard } from "@/components/cards/fixture-card"
+import { MarkdownRenderer } from "@/components/markdown-renderer"
 import { useUser } from "@clerk/nextjs"
 
 interface Message {
@@ -16,6 +17,12 @@ interface Message {
   role: "user" | "assistant"
   content: string
   components?: React.ReactNode[]
+  tools?: string[]
+}
+
+interface CardData {
+  type: "prediction" | "standings" | "fixture"
+  [key: string]: unknown
 }
 
 const SUGGESTED_PROMPTS = [
@@ -49,7 +56,6 @@ function HomeContent() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState(initialQuery)
   const [loading, setLoading] = useState(false)
-  const [streamingContent, setStreamingContent] = useState("")
   const [mode, setMode] = useState<"simple" | "deep">("simple")
   const [premiumAccess, setPremiumAccess] = useState(false)
   const [paymentStep, setPaymentStep] = useState<"idle" | "paying" | "verifying" | "error">("idle")
@@ -69,14 +75,19 @@ function HomeContent() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, streamingContent, showPaymentPrompt])
+  }, [messages, showPaymentPrompt])
 
   useEffect(() => {
     if (initialQuery) handleSend(initialQuery)
   }, [])
 
   useEffect(() => {
-    if (!conversationIdParam) return
+    if (!conversationIdParam) {
+      setConversationId(null)
+      setMessages([])
+      setPremiumAccess(false)
+      return
+    }
     fetch(`/api/conversations/${conversationIdParam}`)
       .then((r) => {
         if (!r.ok) throw new Error("Not found")
@@ -87,8 +98,8 @@ function HomeContent() {
         const loaded: Message[] = (data.messages || []).map((m: { role: string; content: string }) => ({
           id: nextId(),
           role: m.role,
-          content: m.content,
-          components: [],
+          content: m.role === "assistant" ? stripCardMarkers(m.content) : m.content,
+          components: m.role === "assistant" ? generateComponents(m.content) : [],
         }))
         setMessages(loaded)
       })
@@ -99,33 +110,60 @@ function HomeContent() {
   }, [conversationIdParam])
 
   function generateComponents(content: string): React.ReactNode[] {
-    const lower = content.toLowerCase()
-    if (lower.includes("prediction") || lower.includes("win") || lower.includes("probability")) {
-      return [<PredictionCard key="pred" homeTeam="Spain" awayTeam="Brazil" homeWin={58} awayWin={42} confidence="High" link="/match/1" />]
+    const cardRegex = /\[CARD\]([\s\S]*?)\[\/CARD\]/gi
+    const nodes: React.ReactNode[] = []
+    let match
+    while ((match = cardRegex.exec(content)) !== null) {
+      try {
+        const data: CardData = JSON.parse(match[1])
+        switch (data.type) {
+          case "prediction":
+            nodes.push(
+              <PredictionCard
+                key={`pred-${nodes.length}`}
+                homeTeam={data.homeTeam as string}
+                awayTeam={data.awayTeam as string}
+                homeWin={data.homeWin as number}
+                awayWin={data.awayWin as number}
+                confidence={data.confidence as string}
+                link={data.link as string}
+              />
+            )
+            break
+          case "standings":
+            nodes.push(
+              <StandingsCard
+                key={`stand-${nodes.length}`}
+                group={data.group as string}
+                teams={data.teams as { pos: number; name: string; pts: number }[]}
+                link={data.link as string}
+              />
+            )
+            break
+          case "fixture":
+            nodes.push(
+              <FixtureCard
+                key={`fix-${nodes.length}`}
+                home={data.home as string}
+                away={data.away as string}
+                time={data.time as string}
+                stage={data.stage as string}
+                link={data.link as string}
+              />
+            )
+            break
+        }
+      } catch {
+        continue
+      }
     }
-    if (lower.includes("standing") || lower.includes("group") || lower.includes("table")) {
-      return [<StandingsCard key="stand" group="Group A" teams={[{pos:1,name:"Spain",pts:9},{pos:2,name:"Japan",pts:6},{pos:3,name:"Mexico",pts:3},{pos:4,name:"Morocco",pts:0}]} link="/match/1" />]
-    }
-    if (lower.includes("fixture") || lower.includes("today") || lower.includes("match") || lower.includes("schedule")) {
-      return [
-        <div key="fixtures" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <FixtureCard home="Spain" away="Brazil" time="20:00 UTC" stage="Quarter Final" link="/match/1" />
-          <FixtureCard home="France" away="Germany" time="16:00 UTC" stage="Quarter Final" link="/match/2" />
-          <FixtureCard home="Argentina" away="Portugal" time="18:00 UTC" stage="Quarter Final" link="/match/3" />
-          <FixtureCard home="England" away="Netherlands" time="21:00 UTC" stage="Quarter Final" link="/match/4" />
-        </div>,
-      ]
-    }
-    return []
+    return nodes
   }
 
-  async function streamResponse(text: string) {
-    setStreamingContent("")
-    const words = text.split(" ")
-    for (let i = 0; i < words.length; i++) {
-      await new Promise((r) => setTimeout(r, 30 + Math.random() * 50))
-      setStreamingContent((prev) => prev + words[i] + " ")
-    }
+  function stripCardMarkers(text: string): string {
+    let cleaned = text.replace(/\[CARD\][\s\S]*?\[\/CARD\]/gi, "")
+    cleaned = cleaned.replace(/\[CARD\][\s\S]*?$/gi, "")
+    return cleaned.trim()
   }
 
   async function performAPICall(text: string) {
@@ -142,11 +180,12 @@ function HomeContent() {
         body: JSON.stringify({
           message: text,
           mode,
-          conversationId: isSignedIn ? conversationId : null,
+          conversationId: isSignedIn && conversationId ? conversationId : null,
         }),
       })
       const data = await res.json()
-      const fullContent = data.response || data.content || ""
+      const rawContent = data.rawContent || data.response || data.content || ""
+      const displayContent = stripCardMarkers(rawContent)
 
       if (data.conversationId && isSignedIn) {
         setConversationId(data.conversationId)
@@ -155,19 +194,27 @@ function HomeContent() {
         }
       }
 
-      const components = generateComponents(fullContent)
-      await streamResponse(fullContent)
+      const components = generateComponents(rawContent)
+      const newMsgId = nextId()
+      const hasTools = Array.isArray(data.tools) && data.tools.length > 0
 
-      setMessages((prev) => [
-        ...prev,
-        { id: nextId(), role: "assistant", content: fullContent, components: components.length ? components : undefined },
-      ])
-      setStreamingContent("")
+      if (hasTools) {
+        setMessages((prev) => [
+          ...prev,
+          { id: nextId(), role: "assistant", content: "", tools: data.tools },
+        ])
+      }
+
+      setMessages((prev) => {
+        const filtered = hasTools ? prev.slice(0, -1) : prev
+        return [
+          ...filtered,
+          { id: newMsgId, role: "assistant", content: displayContent, components: components.length ? components : undefined, tools: hasTools ? data.tools : undefined },
+        ]
+      })
     } catch {
       const errorContent = "Sorry, I encountered an error. Please try again."
-      await streamResponse(errorContent)
       setMessages((prev) => [...prev, { id: nextId(), role: "assistant", content: errorContent }])
-      setStreamingContent("")
     } finally {
       setLoading(false)
     }
@@ -200,29 +247,42 @@ function HomeContent() {
         body: JSON.stringify({
           message: pendingDeepMessage,
           mode: "deep",
-          conversationId: isSignedIn ? conversationId : null,
+          conversationId: isSignedIn && conversationId ? conversationId : null,
         }),
       })
 
-      if (res.status !== 402) {
+        if (res.status !== 402) {
         const data = await res.json()
         setPremiumAccess(true)
         setShowPaymentPrompt(false)
         setPaymentStep("idle")
-        const fullContent = data.response || data.content || ""
+        const rawContent = data.rawContent || data.response || data.content || ""
+        const displayContent = stripCardMarkers(rawContent)
 
         if (data.conversationId && isSignedIn) {
           setConversationId(data.conversationId)
           router.replace(`/?c=${data.conversationId}`, { scroll: false })
         }
 
-        const components = generateComponents(fullContent)
-        await streamResponse(fullContent)
-        setMessages((prev) => [
-          ...prev,
-          { id: nextId(), role: "assistant", content: fullContent, components: components.length ? components : undefined },
-        ])
-        setStreamingContent("")
+        const components = generateComponents(rawContent)
+        const newMsgId = nextId()
+        const hasTools = Array.isArray(data.tools) && data.tools.length > 0
+
+        if (hasTools) {
+          setMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "assistant", content: "", tools: data.tools },
+          ])
+        }
+
+        setMessages((prev) => {
+          const filtered = hasTools ? prev.slice(0, -1) : prev
+          return [
+            ...filtered,
+            { id: newMsgId, role: "assistant", content: displayContent, components: components.length ? components : undefined, tools: hasTools ? data.tools : undefined },
+          ]
+        })
+
         setPendingDeepMessage(null)
         return
       }
@@ -249,29 +309,42 @@ function HomeContent() {
         body: JSON.stringify({
           message: pendingDeepMessage,
           mode: "deep",
-          conversationId: isSignedIn ? conversationId : null,
+          conversationId: isSignedIn && conversationId ? conversationId : null,
         }),
       })
 
-      if (retryRes.ok) {
+        if (retryRes.ok) {
         const data = await retryRes.json()
         setPremiumAccess(true)
         setShowPaymentPrompt(false)
         setPaymentStep("idle")
-        const fullContent = data.response || data.content || ""
+        const rawContent = data.rawContent || data.response || data.content || ""
+        const displayContent = stripCardMarkers(rawContent)
 
         if (data.conversationId && isSignedIn) {
           setConversationId(data.conversationId)
           router.replace(`/?c=${data.conversationId}`, { scroll: false })
         }
 
-        const components = generateComponents(fullContent)
-        await streamResponse(fullContent)
-        setMessages((prev) => [
-          ...prev,
-          { id: nextId(), role: "assistant", content: fullContent, components: components.length ? components : undefined },
-        ])
-        setStreamingContent("")
+        const components = generateComponents(rawContent)
+        const newMsgId = nextId()
+        const hasTools = Array.isArray(data.tools) && data.tools.length > 0
+
+        if (hasTools) {
+          setMessages((prev) => [
+            ...prev,
+            { id: nextId(), role: "assistant", content: "", tools: data.tools },
+          ])
+        }
+
+        setMessages((prev) => {
+          const filtered = hasTools ? prev.slice(0, -1) : prev
+          return [
+            ...filtered,
+            { id: newMsgId, role: "assistant", content: displayContent, components: components.length ? components : undefined, tools: hasTools ? data.tools : undefined },
+          ]
+        })
+
         setPendingDeepMessage(null)
       } else {
         setPaymentStep("error")
@@ -443,9 +516,27 @@ function HomeContent() {
                   <p className="text-xs font-medium text-muted-foreground">
                     {msg.role === "assistant" ? "KickIQ" : "You"}
                   </p>
-                  <div className="text-sm leading-7 text-foreground whitespace-pre-wrap">
-                    {msg.content}
-                  </div>
+                  {msg.tools && msg.tools.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-1">
+                      {[...new Set(msg.tools)].map((t) => (
+                        <span
+                          key={t}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/50 text-[10px] text-muted-foreground font-mono"
+                        >
+                          {t === "get_fixtures" && "📅"}
+                          {t === "get_live_scores" && "⚡"}
+                          {t === "get_standings" && "📊"}
+                          {t === "get_team_info" && "ℹ️"}
+                          {t === "get_match_prediction" && "🔮"}
+                          {t === "web_search" && "🔍"}
+                          {t === "fetch_url" && "🌐"}
+                          {t.replace(/_/g, " ")}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <MarkdownRenderer content={msg.content} />
 
                   {msg.components && (
                     <div className="pt-3 space-y-3">
@@ -540,24 +631,7 @@ function HomeContent() {
               </div>
             )}
 
-            {streamingContent && (
-              <div className="group flex gap-3 px-1 py-3 md:px-4">
-                <Avatar className="h-7 w-7 rounded-sm mt-0.5">
-                  <AvatarFallback className="rounded-sm bg-transparent text-foreground">
-                    <WorldCupIcon size={16} />
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">KickIQ</p>
-                  <div className="text-sm leading-7 text-foreground whitespace-pre-wrap">
-                    {streamingContent}
-                    <span className="inline-block w-2 h-4 bg-foreground/70 animate-pulse ml-0.5 rounded-sm align-middle" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {loading && !streamingContent && (
+            {loading && (
               <div className="flex gap-3 px-1 py-3 md:px-4">
                 <Avatar className="h-7 w-7 rounded-sm mt-0.5">
                   <AvatarFallback className="rounded-sm bg-transparent text-foreground">

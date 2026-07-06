@@ -87,23 +87,23 @@ export function Sidebar() {
 
   const fullSidebar = (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="p-3 space-y-3">
+        <div className="p-2 space-y-2">
         <Link
           href="/"
           onClick={closeSidebar}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
         >
           <Plus className="h-4 w-4 shrink-0" />
           <span>New chat</span>
         </Link>
         {isSignedIn && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search conversations"
-              className="w-full h-9 rounded-lg border border-border bg-transparent pl-9 pr-3 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-muted-foreground/40 transition-colors"
+              placeholder="Search"
+              className="w-full h-8 rounded-lg border border-border bg-transparent pl-8 pr-2 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-muted-foreground/40 transition-colors"
             />
           </div>
         )}
@@ -149,11 +149,11 @@ export function Sidebar() {
         )}
       </div>
 
-      <div className="p-3 border-t border-border space-y-1">
+      <div className="p-2 border-t border-border space-y-0.5">
         <Link
           href="/premium"
           onClick={closeSidebar}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
         >
           <Settings className="h-4 w-4 shrink-0" />
           <span>Premium</span>
@@ -161,7 +161,7 @@ export function Sidebar() {
         <Link
           href="/about"
           onClick={closeSidebar}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
         >
           <Settings className="h-4 w-4 shrink-0" />
           <span>About KickIQ</span>
@@ -169,14 +169,14 @@ export function Sidebar() {
         {isSignedIn ? (
           <button
             onClick={() => router.push("/")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             <span>Sign out</span>
           </button>
         ) : (
           <SignInButton mode="modal">
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
+            <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Sign in</span>
             </button>
@@ -187,7 +187,7 @@ export function Sidebar() {
       <div className="p-2 border-t border-border">
         <button
           onClick={() => setSidebarOpen(false)}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+          className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
         >
           <PanelLeftClose className="h-4 w-4 shrink-0" />
           <span>Close sidebar</span>
@@ -228,11 +228,11 @@ export function Sidebar() {
               onClick={() => setSidebarOpen(false)}
             />
             <motion.aside
-              initial={{ x: -256 }}
+              initial={{ x: -176 }}
               animate={{ x: 0 }}
-              exit={{ x: -256 }}
+              exit={{ x: -176 }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-64 border-r border-border bg-sidebar shadow-xl overflow-hidden"
+              className="hidden md:flex fixed left-0 top-0 bottom-0 z-50 w-44 border-r border-border bg-sidebar shadow-xl overflow-hidden"
             >
               {fullSidebar}
             </motion.aside>
@@ -245,7 +245,7 @@ export function Sidebar() {
           <SheetTrigger className="flex items-center justify-center rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
             <Menu className="h-5 w-5" />
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 bg-sidebar">
+          <SheetContent side="left" className="w-44 p-0 bg-sidebar">
             <div className="flex items-center justify-end p-2 border-b border-border">
               <button
                 onClick={() => setMobileOpen(false)}

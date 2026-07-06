@@ -2,10 +2,6 @@ export const APP_NAME = "KickIQ"
 export const APP_DESCRIPTION = "Your AI Copilot for Every World Cup Match"
 export const APP_TAGLINE = "Smarter Football. Better Insights."
 
-export const API_FOOTBALL_BASE_URL =
-  process.env.API_FOOTBALL_BASE_URL || "https://v3.football.api-sports.io"
-export const API_FOOTBALL_KEY = process.env.API_FOOTBALL_KEY || ""
-
 export const INJECTIVE_RPC_URL =
   process.env.INJECTIVE_RPC_URL || "https://injective-rpc.publicnode.com"
 export const INJECTIVE_REST_URL =

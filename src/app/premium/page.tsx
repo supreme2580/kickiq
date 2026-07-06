@@ -4,9 +4,9 @@ import Link from "next/link"
 import { Zap, Bot, TrendingUp, Shield, ArrowRight } from "lucide-react"
 
 const FEATURES = [
-  { title: "Advanced AI Reports", description: "Deep tactical analysis for every match — formations, pressing patterns, and weaknesses.", icon: Bot },
-  { title: "Match Simulations", description: "AI-powered match simulations showing likely outcomes and key scenarios.", icon: TrendingUp },
-  { title: "Tactical Breakdowns", description: "Professional-grade tactical analysis of team strategies and formations.", icon: Shield },
+  { title: "Deep Tactical Analysis", description: "Multi-tool AI analysis combining World Cup data, team form, and betting odds for comprehensive match breakdowns.", icon: Bot },
+  { title: "Betting Insights", description: "Data-driven betting recommendations — best bets and bets to avoid based on real odds and match statistics.", icon: TrendingUp },
+  { title: "Smart Predictions", description: "AI evaluates fixtures, standings, and team performance to generate reasoned predictions with confidence levels.", icon: Shield },
 ]
 
 export default function PremiumPage() {

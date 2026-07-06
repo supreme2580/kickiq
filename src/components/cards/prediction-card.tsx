@@ -7,7 +7,7 @@ interface PredictionCardProps {
   homeWin: number
   awayWin: number
   confidence: string
-  link: string
+  link?: string
 }
 
 export function PredictionCard({ homeTeam, awayTeam, homeWin, awayWin, confidence, link }: PredictionCardProps) {
@@ -37,12 +37,14 @@ export function PredictionCard({ homeTeam, awayTeam, homeWin, awayWin, confidenc
         <div className="bg-muted-foreground/50 transition-all" style={{ width: `${awayWin}%` }} />
       </div>
 
-      <Link
-        href={link}
-        className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-      >
-        Match details <ArrowRight className="h-3 w-3" />
-      </Link>
+      {link && (
+        <Link
+          href={link}
+          className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+        >
+          Match details <ArrowRight className="h-3 w-3" />
+        </Link>
+      )}
     </div>
   )
 }

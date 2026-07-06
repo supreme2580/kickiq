@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react"
 interface StandingsCardProps {
   group: string
   teams: { pos: number; name: string; pts: number }[]
-  link: string
+  link?: string
 }
 
 export function StandingsCard({ group, teams, link }: StandingsCardProps) {
@@ -29,12 +29,14 @@ export function StandingsCard({ group, teams, link }: StandingsCardProps) {
         ))}
       </div>
 
-      <Link
-        href={link}
-        className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
-      >
-        View full table <ArrowRight className="h-3 w-3" />
-      </Link>
+      {link && (
+        <Link
+          href={link}
+          className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
+        >
+          View full table <ArrowRight className="h-3 w-3" />
+        </Link>
+      )}
     </div>
   )
 }
