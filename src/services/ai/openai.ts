@@ -1,4 +1,5 @@
 import OpenAI from "openai"
+import type { ChatCompletionMessageParam } from "openai/resources/index.mjs"
 
 let _client: OpenAI | null = null
 
@@ -32,7 +33,7 @@ export async function streamChat(
 }
 
 export async function completion(
-  messages: Array<{ role: "user" | "assistant" | "system"; content: string }>
+  messages: ChatCompletionMessageParam[]
 ) {
   const client = getClient()
   const response = await client.chat.completions.create({

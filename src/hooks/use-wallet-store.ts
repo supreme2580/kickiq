@@ -23,8 +23,7 @@ export const useWalletStore = create<WalletState>((set) => ({
   connect: async (type) => {
     set({ connecting: true })
     try {
-      const w = window as any
-      const wallet = w[type]
+      const wallet = window[type]
       if (!wallet) {
         throw new Error(`${type === "keplr" ? "Keplr" : "Leap"} wallet not installed`)
       }

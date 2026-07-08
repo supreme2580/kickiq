@@ -1,12 +1,7 @@
 "use client"
 
-export default function ErrorPage({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 px-4">
       <h1 className="text-6xl font-bold text-muted-foreground">!</h1>

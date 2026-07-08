@@ -1,4 +1,3 @@
-import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
 interface PredictionCardProps {
@@ -38,12 +37,14 @@ export function PredictionCard({ homeTeam, awayTeam, homeWin, awayWin, confidenc
       </div>
 
       {link && (
-        <Link
+        <a
           href={link}
+          target="_blank"
+          rel="noreferrer"
           className="flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors pt-1"
         >
           Match details <ArrowRight className="h-3 w-3" />
-        </Link>
+        </a>
       )}
     </div>
   )

@@ -25,13 +25,12 @@ export function WalletButton() {
   async function connectKeplr() {
     setConnecting(true)
     try {
-      const w = window as any
-      if (!w.keplr) {
+      if (!window.keplr) {
         alert("Please install Keplr wallet extension")
         return
       }
-      await w.keplr.enable("injective-1")
-      const offlineSigner = w.keplr.getOfflineSigner("injective-1")
+      await window.keplr.enable("injective-1")
+      const offlineSigner = window.keplr.getOfflineSigner("injective-1")
       const accounts = await offlineSigner.getAccounts()
       setWallet({
         address: accounts[0].address,
@@ -48,13 +47,12 @@ export function WalletButton() {
   async function connectLeap() {
     setConnecting(true)
     try {
-      const w = window as any
-      if (!w.leap) {
+      if (!window.leap) {
         alert("Please install Leap wallet extension")
         return
       }
-      await w.leap.enable("injective-1")
-      const offlineSigner = w.leap.getOfflineSigner("injective-1")
+      await window.leap.enable("injective-1")
+      const offlineSigner = window.leap.getOfflineSigner("injective-1")
       const accounts = await offlineSigner.getAccounts()
       setWallet({
         address: accounts[0].address,

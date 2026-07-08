@@ -10,7 +10,7 @@ const clientOptions = {
   serverApi: { version: "1" as const, strict: true, deprecationErrors: true },
 }
 
-let cached: { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null } = { conn: null, promise: null }
+const cached: { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null } = { conn: null, promise: null }
 
 export async function connectDB() {
   if (cached.conn) return cached.conn

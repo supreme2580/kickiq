@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query"
 import { footballApi } from "@/services/football/api"
-import type { FootballFixture, FootballLeague } from "@/services/football/types"
 
 export function useLiveFixtures() {
   return useQuery({

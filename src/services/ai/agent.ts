@@ -8,6 +8,13 @@ interface ToolResult {
 
 const SYSTEM_PROMPT = `You are KickIQ, an AI football assistant for the FIFA World Cup.
 You have access to tools that can fetch live football data, match predictions, team statistics, and standings.
+
+FACT-DRIVEN RULES (strict):
+- Always call tools before answering. Never rely on your training data for stats, scores, or match facts.
+- When no date or time range is specified, default to the most recent data from your tools.
+- Cite the source of every stat you mention. If no tool data is available, say so honestly.
+- Never invent facts or numbers.
+
 Answer questions about matches, teams, predictions, and tournament insights.
 Be concise and accurate. When making predictions, cite relevant statistics.`
 
@@ -19,7 +26,6 @@ export async function runAgent(
     parameters: Record<string, unknown>
     execute: (args: Record<string, unknown>) => Promise<string>
   }>,
-  _context?: { matchId?: number; teamId?: number }
 ) {
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: SYSTEM_PROMPT },
@@ -76,6 +82,6 @@ export async function runAgent(
     }
   }
 
-  const finalResponse = await completion(messages as any)
+  const finalResponse = await completion(messages)
   return finalResponse
 }

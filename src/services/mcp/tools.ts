@@ -111,7 +111,7 @@ export const mcpToolRegistry: MCPTool[] = [
         status: { type: "string", description: "Filter by status: NS (not started), LIVE, FT (finished), etc." },
       },
     },
-    handler: async (args) => getFixtures(args as any),
+    handler: async (args) => getFixtures(args as Parameters<typeof getFixtures>[0]),
   },
   {
     name: "get_live_scores",
@@ -129,7 +129,7 @@ export const mcpToolRegistry: MCPTool[] = [
         season: { type: "number" },
       },
     },
-    handler: async (args) => getStandings(args as any),
+    handler: async (args) => getStandings(args as Parameters<typeof getStandings>[0]),
   },
   {
     name: "get_team_info",
@@ -142,22 +142,22 @@ export const mcpToolRegistry: MCPTool[] = [
       },
     },
     handler: async (args) => {
-      if (args.teamId) return getTeamInfo(args as any)
+      if (args.teamId) return getTeamInfo(args as Parameters<typeof getTeamInfo>[0])
       if (args.name) return searchTeams({ name: args.name as string })
       return "Provide either a teamId or a team name."
     },
   },
   {
     name: "get_match_prediction",
-    description: "Fetch AI prediction for a specific match by fixture ID",
+    description: "Fetch AI prediction for a specific match by fixture ID. You can get fixture IDs from get_fixtures. For betting odds, use web_search instead.",
     parameters: {
       type: "object",
       properties: {
-        fixtureId: { type: "number", description: "Fixture/match ID" },
+        fixtureId: { type: "number", description: "Fixture/match ID (get this from get_fixtures)" },
       },
       required: ["fixtureId"],
     },
-    handler: async (args) => getMatchPrediction(args as any),
+    handler: async (args) => getMatchPrediction(args as Parameters<typeof getMatchPrediction>[0]),
   },
   {
     name: "web_search",
@@ -169,7 +169,7 @@ export const mcpToolRegistry: MCPTool[] = [
       },
       required: ["query"],
     },
-    handler: async (args) => webSearchTool(args as any),
+    handler: async (args) => webSearchTool(args as Parameters<typeof webSearchTool>[0]),
   },
   {
     name: "fetch_url",
@@ -181,7 +181,7 @@ export const mcpToolRegistry: MCPTool[] = [
       },
       required: ["url"],
     },
-    handler: async (args) => fetchUrlTool(args as any),
+    handler: async (args) => fetchUrlTool(args as Parameters<typeof fetchUrlTool>[0]),
   },
 ]
 

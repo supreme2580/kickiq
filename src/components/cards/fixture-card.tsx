@@ -1,5 +1,3 @@
-import Link from "next/link"
-import { ArrowRight } from "lucide-react"
 
 interface FixtureCardProps {
   home: string
@@ -24,5 +22,5 @@ export function FixtureCard({ home, away, time, stage, link }: FixtureCardProps)
     </div>
   )
 
-  return link ? <Link href={link}>{inner}</Link> : inner
+  return link ? <a href={link} target="_blank" rel="noreferrer">{inner}</a> : inner
 }

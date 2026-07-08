@@ -1,14 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Plus, Search, MessageSquare, Settings, Trash2, PanelLeft, PanelLeftClose, Menu, LogOut } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { WorldCupIcon } from "@/components/icons/world-cup"
-import { useUser, SignInButton } from "@clerk/nextjs"
+import { useUser, SignInButton, useClerk } from "@clerk/nextjs"
 
 interface Conversation {
   id: string
@@ -18,9 +17,9 @@ interface Conversation {
 }
 
 export function Sidebar() {
-  const pathname = usePathname()
   const router = useRouter()
-  const { user, isSignedIn } = useUser()
+  const { isSignedIn } = useUser()
+  const { signOut } = useClerk()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -29,13 +28,14 @@ export function Sidebar() {
 
   useEffect(() => {
     if (!isSignedIn) {
-      setConversations([])
       return
     }
-    setLoading(true)
     fetch("/api/conversations")
       .then((r) => r.json())
-      .then((data) => setConversations(Array.isArray(data) ? data : []))
+      .then((data) => {
+        setLoading(true)
+        setConversations(Array.isArray(data) ? data : [])
+      })
       .catch(() => setConversations([]))
       .finally(() => setLoading(false))
   }, [isSignedIn])
@@ -166,15 +166,19 @@ export function Sidebar() {
           <Settings className="h-4 w-4 shrink-0" />
           <span>About KickIQ</span>
         </Link>
-        {isSignedIn ? (
-          <button
-            onClick={() => router.push("/")}
-            className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            <span>Sign out</span>
-          </button>
-        ) : (
+         {isSignedIn ? (
+           <button
+             onClick={async () => {
+               await signOut()
+               router.push("/")
+             }}
+             className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+           >
+             <LogOut className="h-4 w-4 shrink-0" />
+             <span>Sign out</span>
+           </button>
+         ) : (
+
           <SignInButton mode="modal">
             <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
               <LogOut className="h-4 w-4 shrink-0" />

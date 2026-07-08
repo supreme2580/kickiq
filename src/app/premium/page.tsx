@@ -1,15 +1,21 @@
 "use client"
 
 import Link from "next/link"
-import { Zap, Bot, TrendingUp, Shield, ArrowRight } from "lucide-react"
+import { useState } from "react"
+import { Zap, Bot, TrendingUp, Shield, ArrowRight, Coins } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
+import { creditBundlePrices, BuyCreditsDialog } from "@/components/credits/buy-dialog"
 
 const FEATURES = [
-  { title: "Deep Tactical Analysis", description: "Multi-tool AI analysis combining World Cup data, team form, and betting odds for comprehensive match breakdowns.", icon: Bot },
-  { title: "Betting Insights", description: "Data-driven betting recommendations — best bets and bets to avoid based on real odds and match statistics.", icon: TrendingUp },
-  { title: "Smart Predictions", description: "AI evaluates fixtures, standings, and team performance to generate reasoned predictions with confidence levels.", icon: Shield },
+  { title: "Deep Tactical Analysis", description: "Multi-tool AI analysis combining World Cup data, team form, and betting odds.", icon: Bot },
+  { title: "Betting Insights", description: "Data-driven betting recommendations based on real odds and match statistics.", icon: TrendingUp },
+  { title: "Smart Predictions", description: "AI evaluates fixtures, standings, and team performance to generate reasoned predictions.", icon: Shield },
 ]
 
 export default function PremiumPage() {
+  const { isSignedIn } = useUser()
+  const [showBuy, setShowBuy] = useState(false)
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
       <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -21,9 +27,9 @@ export default function PremiumPage() {
           <Zap className="h-3 w-3" />
           Powered by Injective
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Premium</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Deep Analysis Credits</h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Unlock advanced AI analysis powered by Injective x402 and USDC CCTP.
+          Buy credits to unlock AI-powered tactical analysis. Pay once, use per query — no recurring subscriptions.
         </p>
       </div>
 
@@ -39,19 +45,51 @@ export default function PremiumPage() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6 space-y-4 text-center max-w-sm mx-auto">
-        <div className="space-y-1">
-          <p className="text-2xl font-bold">0.50 USDC</p>
-          <p className="text-sm text-muted-foreground">per analysis</p>
+      <div className="rounded-xl border border-border bg-card p-6 space-y-6 max-w-md mx-auto">
+        <p className="text-sm font-medium text-center">Choose a bundle</p>
+        <div className="space-y-3">
+          {creditBundlePrices.map((bundle) => (
+            <button
+              key={bundle.credits}
+              onClick={() => {
+                if (!isSignedIn) return
+                setShowBuy(true)
+              }}
+              disabled={!isSignedIn}
+              className="w-full flex items-center justify-between rounded-lg border border-border bg-card/50 hover:bg-accent/50 transition-colors p-4 disabled:opacity-40 cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <Coins className="h-5 w-5 text-primary" />
+                <div className="text-left">
+                  <p className="text-sm font-semibold">{bundle.credits} credits</p>
+                  <p className="text-xs text-muted-foreground">{bundle.usd} USDC</p>
+                </div>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          ))}
         </div>
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          Connect Wallet <ArrowRight className="h-4 w-4" />
-        </Link>
-        <p className="text-xs text-muted-foreground">Pay with USDC via Injective x402 or CCTP</p>
+
+        {!isSignedIn && (
+          <p className="text-xs text-center text-muted-foreground">
+            Sign in to purchase credits
+          </p>
+        )}
+
+        {isSignedIn && (
+          <p className="text-xs text-center text-muted-foreground">
+            Pay with USDC on Injective via x402. Bridge USDC from another chain during checkout.
+          </p>
+        )}
       </div>
+
+      <div className="text-center">
+        <Link href="/" className="text-sm text-muted-foreground hover:text-foreground underline">
+          Already have credits? Start chatting →
+        </Link>
+      </div>
+
+      {showBuy && <BuyCreditsDialog open={showBuy} onClose={() => setShowBuy(false)} />}
     </div>
   )
 }

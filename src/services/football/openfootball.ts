@@ -151,6 +151,7 @@ export const openfootballApi: {
   getPredictions: (fixtureId: number) => Promise<FootballPrediction | null>
   searchTeams: (name: string) => Promise<FootballTeam[]>
 } = {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getFixtures(leagueId: number = 1, season: number = 2026, status?: string): Promise<FootballFixture[]> {
     const data = await fetchSeason(season)
     let matches = data.matches
@@ -230,6 +231,7 @@ export const openfootballApi: {
     }
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getPredictions(_fixtureId: number): Promise<FootballPrediction | null> {
     return null
   },
