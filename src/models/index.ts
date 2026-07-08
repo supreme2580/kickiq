@@ -1,4 +1,4 @@
-export { User } from "./User"
+
 export { Team } from "./Team"
 export { Competition } from "./Competition"
 export { Match } from "./Match"

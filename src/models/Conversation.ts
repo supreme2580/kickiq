@@ -10,7 +10,7 @@ const MessageSchema = new Schema(
 
 const ConversationSchema = new Schema(
   {
-    userId: { type: String, required: true, index: true },
+    walletAddress: { type: String, required: true, index: true },
     title: { type: String, default: "New chat" },
     messages: [MessageSchema],
   },

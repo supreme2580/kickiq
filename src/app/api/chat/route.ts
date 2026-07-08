@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
 import { getClient, getModel } from "@/services/ai/openai"
 import { withX402Payment } from "@/lib/x402-backend"
 import { connectDB } from "@/lib/db"
@@ -18,13 +17,13 @@ export async function POST(req: NextRequest) {
     const { message, mode, conversationId } = await req.json()
     if (!message) return NextResponse.json({ error: "Message is required" }, { status: 400 })
 
-    const { userId } = await auth()
+    const userId = req.headers.get("x-wallet-address")
 
     if (mode === "deep") {
       const payMethod = req.headers.get("x-pay-method")
       if (payMethod === "credits" && userId) {
         await connectDB()
-        const account = await CreditAccount.findOne({ userId })
+        const account = await CreditAccount.findOne({ walletAddress: userId })
         if (account && account.balance >= 1) {
           account.balance -= 1
           await account.save()
@@ -135,7 +134,7 @@ homeWin/awayWin from odds. link = odds source.`
   if (userId && conversationId) {
     await connectDB()
     const conv = await Conversation.findById(conversationId)
-    if (conv && conv.userId === userId) {
+    if (conv && conv.walletAddress === userId) {
       for (const m of conv.messages) {
         messages.push({ role: m.role, content: m.content })
       }
@@ -217,7 +216,7 @@ async function persistConversation(
 
   if (conversationId) {
     const conv = await Conversation.findById(conversationId)
-    if (conv && conv.userId === userId) {
+    if (conv && conv.walletAddress === userId) {
       conv.messages.push(userMsg, asstMsg)
       if (conv.title === "New chat" && userMessage.length <= 80) {
         conv.title = userMessage
@@ -228,7 +227,7 @@ async function persistConversation(
   }
 
   const conv = await Conversation.create({
-    userId,
+    walletAddress: userId,
     title: userMessage.length <= 80 ? userMessage : userMessage.slice(0, 80) + "...",
     messages: [userMsg, asstMsg],
   })

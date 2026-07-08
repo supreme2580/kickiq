@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import { Zap, Bot, TrendingUp, Shield, ArrowRight, Coins } from "lucide-react"
-import { useUser } from "@clerk/nextjs"
+import { useAppKitAccount } from "@reown/appkit/react"
 import { creditBundlePrices, BuyCreditsDialog } from "@/components/credits/buy-dialog"
 
 const FEATURES = [
@@ -13,7 +13,7 @@ const FEATURES = [
 ]
 
 export default function PremiumPage() {
-  const { isSignedIn } = useUser()
+  const { isConnected } = useAppKitAccount()
   const [showBuy, setShowBuy] = useState(false)
 
   return (
@@ -52,10 +52,10 @@ export default function PremiumPage() {
             <button
               key={bundle.credits}
               onClick={() => {
-                if (!isSignedIn) return
+                if (!isConnected) return
                 setShowBuy(true)
               }}
-              disabled={!isSignedIn}
+              disabled={!isConnected}
               className="w-full flex items-center justify-between rounded-lg border border-border bg-card/50 hover:bg-accent/50 transition-colors p-4 disabled:opacity-40 cursor-pointer"
             >
               <div className="flex items-center gap-3">
@@ -70,13 +70,13 @@ export default function PremiumPage() {
           ))}
         </div>
 
-        {!isSignedIn && (
+        {!isConnected && (
           <p className="text-xs text-center text-muted-foreground">
             Sign in to purchase credits
           </p>
         )}
 
-        {isSignedIn && (
+        {isConnected && (
           <p className="text-xs text-center text-muted-foreground">
             Pay with USDC on Injective via x402. Bridge USDC from another chain during checkout.
           </p>

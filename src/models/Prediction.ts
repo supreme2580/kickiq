@@ -3,7 +3,7 @@ import { Schema, model, models } from "mongoose"
 const PredictionSchema = new Schema(
   {
     matchId: { type: Number, required: true },
-    userId: { type: String, required: true },
+    walletAddress: { type: String, required: true },
     homeScore: Number,
     awayScore: Number,
     winner: String,

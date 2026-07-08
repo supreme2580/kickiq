@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { createWalletClient, custom, createPublicClient, getAddress, padHex, http } from "viem"
 import { injectiveTestnet, sepolia } from "viem/chains"
 import { useAccount } from "wagmi"
-import { ConnectButton, useConnectModal } from "@rainbow-me/rainbowkit"
+import { useAppKit } from "@reown/appkit/react"
 import { INJECTIVE_RPC_URL } from "@/lib/constants"
 
 export const creditBundlePrices = [
@@ -99,7 +99,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
   const [showBridge, setShowBridge] = useState(false)
 
   const { isConnected } = useAccount()
-  const { openConnectModal } = useConnectModal()
+  const { open: openAppKit } = useAppKit()
   const pendingActionRef = useRef<(() => Promise<void>) | null>(null)
 
   useEffect(() => {
@@ -113,7 +113,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
   async function handleBuyWithX402(bundle: typeof creditBundlePrices[number]) {
     if (!isConnected) {
       pendingActionRef.current = () => handleBuyWithX402(bundle)
-      openConnectModal?.()
+      openAppKit()
       return
     }
     setSelectedBundle(bundle)
@@ -172,7 +172,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
   async function handleBridgeAndBuy(bundle: typeof creditBundlePrices[number]) {
     if (!isConnected) {
       pendingActionRef.current = () => handleBridgeAndBuy(bundle)
-      openConnectModal?.()
+      openAppKit()
       return
     }
     setSelectedBundle(bundle)
@@ -347,17 +347,13 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
                     )}
                   </>
                 ) : (
-                  <ConnectButton.Custom>
-                    {({ openConnectModal }) => (
-                      <button
-                        onClick={openConnectModal}
-                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background py-2.5 text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
-                      >
-                        <Zap className="h-4 w-4" />
-                        Connect Wallet
-                      </button>
-                    )}
-                  </ConnectButton.Custom>
+                  <button
+                    onClick={() => openAppKit()}
+                    className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background py-2.5 text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                  >
+                    <Zap className="h-4 w-4" />
+                    Connect Wallet
+                  </button>
                 )}
               </div>
             )}

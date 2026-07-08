@@ -1,10 +1,9 @@
-import { NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { NextRequest, NextResponse } from "next/server"
 import { connectDB } from "@/lib/db"
 import { Conversation } from "@/models"
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth()
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const userId = req.headers.get("x-wallet-address")
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -13,7 +12,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   await connectDB()
 
   const conv = await Conversation.findById(id).lean()
-  if (!conv || conv.userId !== userId) {
+  if (!conv || conv.walletAddress !== userId) {
     return NextResponse.json({ error: "Not found" }, { status: 404 })
   }
 

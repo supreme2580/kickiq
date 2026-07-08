@@ -10,7 +10,7 @@ import { PredictionCard } from "@/components/cards/prediction-card"
 import { StandingsCard } from "@/components/cards/standings-card"
 import { FixtureCard } from "@/components/cards/fixture-card"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
-import { useUser } from "@clerk/nextjs"
+import { useAppKitAccount } from "@reown/appkit/react"
 import { BuyCreditsDialog } from "@/components/credits/buy-dialog"
 
 interface Message {
@@ -112,7 +112,7 @@ export default function Home() {
 function HomeContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { isSignedIn } = useUser()
+  const { isConnected, address } = useAppKitAccount()
   const initialQuery = searchParams.get("q") || ""
   const conversationIdParam = searchParams.get("c")
 
@@ -129,13 +129,13 @@ function HomeContent() {
   const [showBuyDialog, setShowBuyDialog] = useState(false)
 
   useEffect(() => {
-    if (isSignedIn) {
-      fetch("/api/credits")
+    if (isConnected && address) {
+      fetch("/api/credits", { headers: { "x-wallet-address": address } })
         .then((r) => r.ok ? r.json() : { balance: 0 })
         .then((d) => setCreditBalance(d.balance))
         .catch(() => setCreditBalance(0))
     }
-  }, [isSignedIn])
+  }, [isConnected, address])
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -158,7 +158,9 @@ function HomeContent() {
 
   useEffect(() => {
     if (!conversationIdParam) return
-    fetch(`/api/conversations/${conversationIdParam}`)
+    const headers: Record<string, string> = {}
+    if (address) headers["x-wallet-address"] = address
+    fetch(`/api/conversations/${conversationIdParam}`, { headers })
       .then((r) => {
         if (!r.ok) throw new Error("Not found")
         return r.json()
@@ -177,7 +179,7 @@ function HomeContent() {
         setConversationId(null)
         setMessages([])
       })
-  }, [conversationIdParam])
+  }, [conversationIdParam, address])
 
   function generateComponents(content: string): React.ReactNode[] {
     const cardRegex = /\[CARD\]([\s\S]*?)\[\/CARD\]/gi
@@ -240,6 +242,7 @@ function HomeContent() {
     setLoading(true)
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" }
+      if (address) headers["x-wallet-address"] = address
       if (mode === "deep") {
         headers["x-402-payment"] = "verified"
       }
@@ -250,14 +253,14 @@ function HomeContent() {
         body: JSON.stringify({
           message: text,
           mode,
-          conversationId: isSignedIn && conversationId ? conversationId : null,
+          conversationId: isConnected && conversationId ? conversationId : null,
         }),
       })
       const data = await res.json()
       const rawContent = data.rawContent || data.response || data.content || ""
       const displayContent = stripCardMarkers(rawContent)
 
-      if (data.conversationId && isSignedIn) {
+      if (data.conversationId && isConnected) {
         setConversationId(data.conversationId)
         if (data.conversationId !== conversationIdParam) {
           router.replace(`/?c=${data.conversationId}`, { scroll: false })
@@ -305,12 +308,13 @@ function HomeContent() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-wallet-address": address || "",
               "x-pay-method": "credits",
             },
             body: JSON.stringify({
               message: text,
               mode: "deep",
-              conversationId: isSignedIn && conversationId ? conversationId : null,
+              conversationId: isConnected && conversationId ? conversationId : null,
             }),
           })
           if (res.ok) {
@@ -318,7 +322,7 @@ function HomeContent() {
             if (data.remainingCredits !== undefined) setCreditBalance(data.remainingCredits)
             const rawContent = data.rawContent || data.response || data.content || ""
             const displayContent = stripCardMarkers(rawContent)
-            if (data.conversationId && isSignedIn) {
+            if (data.conversationId && isConnected) {
               setConversationId(data.conversationId)
               if (data.conversationId !== conversationIdParam) {
                 router.replace(`/?c=${data.conversationId}`, { scroll: false })
@@ -355,11 +359,11 @@ function HomeContent() {
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-wallet-address": address || "" },
         body: JSON.stringify({
           message: pendingDeepMessage,
           mode: "deep",
-          conversationId: isSignedIn && conversationId ? conversationId : null,
+          conversationId: isConnected && conversationId ? conversationId : null,
         }),
       })
 
@@ -390,13 +394,14 @@ function HomeContent() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-wallet-address": address || "",
           "PAYMENT-SIGNATURE": header,
           "X-PAYMENT": header,
         },
         body: JSON.stringify({
           message: pendingDeepMessage,
           mode: "deep",
-          conversationId: isSignedIn && conversationId ? conversationId : null,
+          conversationId: isConnected && conversationId ? conversationId : null,
         }),
       })
 
@@ -407,7 +412,7 @@ function HomeContent() {
         const rawContent = data.rawContent || data.response || data.content || ""
         const displayContent = stripCardMarkers(rawContent)
 
-        if (data.conversationId && isSignedIn) {
+        if (data.conversationId && isConnected) {
           setConversationId(data.conversationId)
           router.replace(`/?c=${data.conversationId}`, { scroll: false })
         }

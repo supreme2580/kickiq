@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
 import { connectDB } from "@/lib/db"
 import { CreditAccount } from "@/models"
 import { withX402Payment } from "@/lib/x402-backend"
@@ -14,19 +13,19 @@ function getBundleByAmount(amount: string) {
   return CREDIT_BUNDLES.find((b) => b.amount === amount)
 }
 
-export async function GET() {
-  const { userId } = await auth()
+export async function GET(req: NextRequest) {
+  const userId = req.headers.get("x-wallet-address")
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   await connectDB()
-  const account = await CreditAccount.findOne({ userId })
+  const account = await CreditAccount.findOne({ walletAddress: userId })
   return NextResponse.json({ balance: account?.balance ?? 0 })
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth()
+  const userId = req.headers.get("x-wallet-address")
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
@@ -36,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   if (action === "spend") {
     await connectDB()
-    const account = await CreditAccount.findOne({ userId })
+    const account = await CreditAccount.findOne({ walletAddress: userId })
     if (!account || account.balance < 1) {
       return NextResponse.json({ success: false, error: "Insufficient credits" }, { status: 402 })
     }
@@ -56,7 +55,7 @@ export async function POST(req: NextRequest) {
       async () => {
         await connectDB()
         const account = await CreditAccount.findOneAndUpdate(
-          { userId },
+          { walletAddress: userId },
           { $inc: { balance: bundle.credits, totalPurchased: bundle.credits } },
           { upsert: true, new: true }
         )

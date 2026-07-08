@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { WorldCupIcon } from "@/components/icons/world-cup"
-import { useUser, SignInButton, useClerk } from "@clerk/nextjs"
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react"
 
 interface Conversation {
   id: string
@@ -18,8 +18,8 @@ interface Conversation {
 
 export function Sidebar() {
   const router = useRouter()
-  const { isSignedIn } = useUser()
-  const { signOut } = useClerk()
+  const { isConnected, address } = useAppKitAccount()
+  const { open, disconnect } = useAppKit()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -27,10 +27,12 @@ export function Sidebar() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!isSignedIn) {
+    if (!isConnected) {
       return
     }
-    fetch("/api/conversations")
+    const headers: Record<string, string> = {}
+    if (address) headers["x-wallet-address"] = address
+    fetch("/api/conversations", { headers })
       .then((r) => r.json())
       .then((data) => {
         setLoading(true)
@@ -38,7 +40,7 @@ export function Sidebar() {
       })
       .catch(() => setConversations([]))
       .finally(() => setLoading(false))
-  }, [isSignedIn])
+  }, [isConnected, address])
 
   const filteredHistory = conversations.filter((c) =>
     c.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,9 +74,11 @@ export function Sidebar() {
 
   async function handleDelete(e: React.MouseEvent, id: string) {
     e.stopPropagation()
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    if (address) headers["x-wallet-address"] = address
     await fetch("/api/conversations", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ id }),
     })
     setConversations((prev) => prev.filter((c) => c.id !== id))
@@ -96,7 +100,7 @@ export function Sidebar() {
           <Plus className="h-4 w-4 shrink-0" />
           <span>New chat</span>
         </Link>
-        {isSignedIn && (
+        {isConnected && (
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <input
@@ -110,7 +114,7 @@ export function Sidebar() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-2 space-y-4">
-        {!isSignedIn ? (
+        {!isConnected ? (
           <div className="px-2 py-8 text-center">
             <p className="text-xs text-muted-foreground">Sign in to save your chat history</p>
           </div>
@@ -166,25 +170,25 @@ export function Sidebar() {
           <Settings className="h-4 w-4 shrink-0" />
           <span>About KickIQ</span>
         </Link>
-         {isSignedIn ? (
-           <button
-             onClick={async () => {
-               await signOut()
-               router.push("/")
-             }}
-             className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
-           >
-             <LogOut className="h-4 w-4 shrink-0" />
-             <span>Sign out</span>
-           </button>
-         ) : (
-
-          <SignInButton mode="modal">
-            <button className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer">
+         {isConnected ? (
+            <button
+              onClick={async () => {
+                await disconnect()
+                router.push("/")
+              }}
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>Disconnect</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => open()}
+              className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors cursor-pointer"
+            >
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Sign in</span>
             </button>
-          </SignInButton>
         )}
       </div>
 
