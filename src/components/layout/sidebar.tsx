@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { WorldCupIcon } from "@/components/icons/world-cup"
-import { useAppKit, useAppKitAccount } from "@reown/appkit/react"
+import { useAppKit, useAppKitAccount, useDisconnect } from "@reown/appkit/react"
 
 interface Conversation {
   id: string
@@ -19,7 +19,8 @@ interface Conversation {
 export function Sidebar() {
   const router = useRouter()
   const { isConnected, address } = useAppKitAccount()
-  const { open, disconnect } = useAppKit()
+  const { open } = useAppKit()
+  const { disconnect } = useDisconnect()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
