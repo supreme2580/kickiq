@@ -157,7 +157,11 @@ function HomeContent() {
   }, [initialQuery])
 
   useEffect(() => {
-    if (!conversationIdParam) return
+    if (!conversationIdParam) {
+      setMessages([])
+      setConversationId(null)
+      return
+    }
     const headers: Record<string, string> = {}
     if (address) headers["x-wallet-address"] = address
     fetch(`/api/conversations/${conversationIdParam}`, { headers })
