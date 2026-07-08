@@ -28,19 +28,25 @@ export function Sidebar() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!isConnected) {
+    if (!isConnected || !address) {
+      setConversations([])
       return
     }
-    const headers: Record<string, string> = {}
-    if (address) headers["x-wallet-address"] = address
-    fetch("/api/conversations", { headers })
-      .then((r) => r.json())
-      .then((data) => {
-        setLoading(true)
-        setConversations(Array.isArray(data) ? data : [])
-      })
-      .catch(() => setConversations([]))
-      .finally(() => setLoading(false))
+
+    setLoading(true)
+
+    function fetchConversations() {
+      return fetch("/api/conversations", { headers: { "x-wallet-address": address ?? "" } })
+        .then((r) => r.json())
+        .then((data) => {
+          setConversations(Array.isArray(data) ? data : [])
+        })
+        .catch(() => {})
+    }
+
+    fetchConversations().finally(() => setLoading(false))
+    const interval = setInterval(fetchConversations, 5000)
+    return () => clearInterval(interval)
   }, [isConnected, address])
 
   const filteredHistory = conversations.filter((c) =>

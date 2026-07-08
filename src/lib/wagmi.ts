@@ -1,10 +1,10 @@
 import { createAppKit } from "@reown/appkit/react"
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi"
-import { injectiveTestnet, sepolia } from "wagmi/chains"
+import { injectiveTestnet, sepolia } from "@reown/appkit/networks"
 
 const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID!
 
-const networks = [injectiveTestnet, sepolia] as const
+const networks = [injectiveTestnet, sepolia] as any
 
 const wagmiAdapter = new WagmiAdapter({
   projectId,

@@ -104,17 +104,23 @@ function ModeToggle({ mode, setMode }: { mode: "simple" | "deep"; setMode: (m: "
 export default function Home() {
   return (
     <Suspense fallback={null}>
-      <HomeContent />
+      <HomeSearchParams />
     </Suspense>
   )
 }
 
-function HomeContent() {
+function HomeSearchParams() {
   const searchParams = useSearchParams()
+  const conversationIdParam = searchParams.get("c")
+  const initialQuery = searchParams.get("q") || ""
+  return (
+    <HomeContent key={conversationIdParam || "home"} initialQuery={initialQuery} conversationIdParam={conversationIdParam} />
+  )
+}
+
+function HomeContent({ initialQuery, conversationIdParam }: { initialQuery: string; conversationIdParam: string | null }) {
   const router = useRouter()
   const { isConnected, address } = useAppKitAccount()
-  const initialQuery = searchParams.get("q") || ""
-  const conversationIdParam = searchParams.get("c")
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState(initialQuery)

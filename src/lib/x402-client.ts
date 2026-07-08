@@ -41,7 +41,7 @@ export async function signX402Payment(
 
   const walletClient = createWalletClient({
     chain: targetChain,
-    transport: custom(eth),
+    transport: custom(eth as any),
   })
 
   await walletClient.switchChain({ id: targetChain.id })

@@ -182,7 +182,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
       const e = window.ethereum
 
       setStep("approve")
-      const walletClient = createWalletClient({ chain: sepolia, transport: custom(e) })
+      const walletClient = createWalletClient({ chain: sepolia, transport: custom(e as any) })
       await walletClient.switchChain({ id: sepolia.id })
       const [account] = await walletClient.getAddresses()
 
@@ -254,7 +254,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
 
 
       setStep("mint")
-      const injWalletClient = createWalletClient({ chain: injectiveTestnet, transport: custom(e) })
+      const injWalletClient = createWalletClient({ chain: injectiveTestnet, transport: custom(e as any) })
       await injWalletClient.switchChain({ id: injectiveTestnet.id })
       const injPublicClient = createPublicClient({
         chain: injectiveTestnet,
@@ -305,8 +305,12 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
             {creditBundlePrices.map((bundle) => (
               <button
                 key={bundle.credits}
-                onClick={() => setSelectedBundle(bundle)}
-                className="w-full flex items-center justify-between rounded-lg border border-border hover:bg-accent/50 transition-colors p-4 cursor-pointer"
+                onClick={() => setSelectedBundle(selectedBundle === bundle ? null : bundle)}
+                className={`w-full flex items-center justify-between rounded-lg border p-4 cursor-pointer transition-colors ${
+                  selectedBundle === bundle
+                    ? "border-white bg-accent/30"
+                    : "border-border hover:bg-accent/50"
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <Coins className="h-5 w-5 text-primary" />
