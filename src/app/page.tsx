@@ -10,7 +10,7 @@ import { PredictionCard } from "@/components/cards/prediction-card"
 import { StandingsCard } from "@/components/cards/standings-card"
 import { FixtureCard } from "@/components/cards/fixture-card"
 import { MarkdownRenderer } from "@/components/markdown-renderer"
-import { useAppKitAccount } from "@reown/appkit/react"
+import { useAppKit, useAppKitAccount } from "@reown/appkit/react"
 import { BuyCreditsDialog } from "@/components/credits/buy-dialog"
 
 interface Message {
@@ -121,6 +121,7 @@ function HomeSearchParams() {
 function HomeContent({ initialQuery, conversationIdParam }: { initialQuery: string; conversationIdParam: string | null }) {
   const router = useRouter()
   const { isConnected, address } = useAppKitAccount()
+  const { open } = useAppKit()
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState(initialQuery)
@@ -680,30 +681,40 @@ function HomeContent({ initialQuery, conversationIdParam }: { initialQuery: stri
                           <span className="text-sm font-semibold">0.10 USDC</span>
                         </div>
                       </div>
-                      <button
-                        onClick={handlePayment}
-                        disabled={paymentStep === "paying" || paymentStep === "verifying"}
-                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
-                      >
-                        {paymentStep === "idle" && (
-                          <>
-                            <Zap className="h-4 w-4" />
-                            Pay with x402
-                          </>
-                        )}
-                        {paymentStep === "paying" && (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Processing Payment...
-                          </>
-                        )}
-                        {paymentStep === "verifying" && (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            Verifying...
-                          </>
-                        )}
-                      </button>
+                      {isConnected ? (
+                        <button
+                          onClick={handlePayment}
+                          disabled={paymentStep === "paying" || paymentStep === "verifying"}
+                          className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background py-2 text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                        >
+                          {paymentStep === "idle" && (
+                            <>
+                              <Zap className="h-4 w-4" />
+                              Pay with x402
+                            </>
+                          )}
+                          {paymentStep === "paying" && (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Processing Payment...
+                            </>
+                          )}
+                          {paymentStep === "verifying" && (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Verifying...
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => open()}
+                          className="w-full flex items-center justify-center gap-2 rounded-lg bg-foreground text-background py-2 text-sm font-medium hover:opacity-90 transition-opacity cursor-pointer"
+                        >
+                          <Zap className="h-4 w-4" />
+                          Connect Wallet
+                        </button>
+                      )}
                       {paymentStep === "error" && (
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-red-500">Payment failed. Please try again.</span>
