@@ -98,7 +98,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
   const [errorMsg, setErrorMsg] = useState("")
   const [showBridge, setShowBridge] = useState(false)
 
-  const { isConnected } = useAccount()
+  const { isConnected, address } = useAccount()
   const { open: openAppKit } = useAppKit()
   const pendingActionRef = useRef<(() => Promise<void>) | null>(null)
 
@@ -121,7 +121,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
     try {
       const res = await fetch("/api/credits", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-wallet-address": address ?? "" },
         body: JSON.stringify({ action: "purchase", amount: bundle.amount }),
       })
 
@@ -142,6 +142,7 @@ export function BuyCreditsDialog({ open, onClose, onCreditsUpdated }: BuyCredits
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-wallet-address": address ?? "",
             "PAYMENT-SIGNATURE": header,
             "X-PAYMENT": header,
           },
